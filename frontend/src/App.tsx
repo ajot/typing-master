@@ -102,7 +102,7 @@ function App() {
     // Submit score to API
     if (player && prompt) {
       try {
-        await fetch(`${API_BASE}/api/scores`, {
+        const res = await fetch(`${API_BASE}/api/scores`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -112,9 +112,17 @@ function App() {
             accuracy: stats.accuracy,
           }),
         });
+        if (!res.ok) {
+          const errorData = await res.json();
+          console.error('Score submission failed:', res.status, errorData);
+        } else {
+          console.log('Score submitted successfully');
+        }
       } catch (err) {
         console.error('Failed to submit score:', err);
       }
+    } else {
+      console.error('Cannot submit score: player or prompt is missing', { player, prompt });
     }
 
     setGameState('results');

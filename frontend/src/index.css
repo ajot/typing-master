@@ -17,6 +17,8 @@
 
 /* Base styles */
 :root {
+  --accent-color: #FF6B00;
+  --accent-color-rgb: 255, 107, 0;
   font-family: 'Press Start 2P', cursive;
   line-height: 1.5;
   font-weight: 400;
@@ -27,6 +29,17 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Theme variants */
+:root.theme-orange {
+  --accent-color: #FF6B00;
+  --accent-color-rgb: 255, 107, 0;
+}
+
+:root.theme-blue {
+  --accent-color: #0080FF;
+  --accent-color-rgb: 0, 128, 255;
 }
 
 body {
@@ -64,8 +77,8 @@ body {
   text-shadow: 0 0 5px currentColor, 0 0 10px currentColor;
 }
 
-.text-glow-orange {
-  text-shadow: 0 0 5px #FF6B00, 0 0 10px #FF6B00, 0 0 15px #FF6B00;
+.text-glow-accent {
+  text-shadow: 0 0 5px var(--accent-color), 0 0 10px var(--accent-color), 0 0 15px var(--accent-color);
 }
 
 .text-glow-green {
@@ -83,7 +96,7 @@ body {
 /* Retro button styles */
 .retro-button {
   font-family: 'Press Start 2P', cursive;
-  background-color: #FF6B00;
+  background-color: var(--accent-color);
   color: #000000;
   padding: 0.75rem 1.5rem;
   border: 4px solid #FFFFFF;
@@ -96,7 +109,7 @@ body {
 
 .retro-button:hover {
   background-color: #FFFFFF;
-  color: #FF6B00;
+  color: var(--accent-color);
 }
 
 .retro-button:active {
@@ -108,8 +121,8 @@ body {
 .retro-input {
   font-family: 'Press Start 2P', cursive;
   background-color: #000000;
-  color: #FF6B00;
-  border: 4px solid #FF6B00;
+  color: var(--accent-color);
+  border: 4px solid var(--accent-color);
   padding: 0.75rem 1rem;
   font-size: 0.625rem;
   outline: none;
@@ -122,15 +135,15 @@ body {
 }
 
 .retro-input::placeholder {
-  color: rgba(255, 107, 0, 0.5);
+  color: rgba(var(--accent-color-rgb), 0.5);
 }
 
 /* Retro panel */
 .retro-panel {
   background-color: #000000;
-  border: 4px solid #FF6B00;
+  border: 4px solid var(--accent-color);
   padding: 1.5rem;
-  box-shadow: 6px 6px 0px rgba(255, 107, 0, 0.3);
+  box-shadow: 6px 6px 0px rgba(var(--accent-color-rgb), 0.3);
 }
 
 /* Blinking animation */
@@ -155,16 +168,25 @@ body {
 }
 
 /* Utility classes */
+/* Accent color - uses theme variable */
+.text-accent { color: var(--accent-color); }
+.bg-accent { background-color: var(--accent-color); }
+.border-accent { border-color: var(--accent-color); }
+
+/* Legacy color classes (for non-themed elements) */
 .text-do-orange { color: #FF6B00; }
+.text-do-blue { color: #0080FF; }
 .text-retro-green { color: #00FF00; }
 .text-retro-red { color: #FF0000; }
 .text-retro-cyan { color: #00FFFF; }
 .text-retro-gray { color: #808080; }
 .bg-do-orange { background-color: #FF6B00; }
+.bg-do-blue { background-color: #0080FF; }
 .bg-retro-green { background-color: #00FF00; }
 .bg-retro-red { background-color: #FF0000; }
 .bg-retro-cyan { background-color: #00FFFF; }
 .border-do-orange { border-color: #FF6B00; }
+.border-do-blue { border-color: #0080FF; }
 .border-retro-red { border-color: #FF0000; }
 .border-retro-green { border-color: #00FF00; }
 .border-retro-cyan { border-color: #00FFFF; }
