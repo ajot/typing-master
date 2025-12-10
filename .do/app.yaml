@@ -12,7 +12,7 @@ services:
     envs:
       - key: DATABASE_URL
         scope: RUN_TIME
-        value: ${db.DATABASE_URL}
+        type: SECRET
 
 static_sites:
   - name: web
@@ -21,13 +21,3 @@ static_sites:
     output_dir: dist
     routes:
       - path: /
-    envs:
-      - key: VITE_API_URL
-        scope: BUILD_TIME
-        value: ${APP_URL}
-
-databases:
-  - name: db
-    engine: PG
-    production: false
-    version: "16"
