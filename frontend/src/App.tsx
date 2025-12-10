@@ -195,12 +195,7 @@ function App() {
       )}
 
       {/* Game States */}
-      {gameState === 'welcome' && (
-        <WelcomeScreen
-          onStart={handleStart}
-          onViewLeaderboard={handleViewLeaderboard}
-        />
-      )}
+      {gameState === 'welcome' && <WelcomeScreen onStart={handleStart} />}
 
       {gameState === 'getReady' && prompt && (
         <TextReveal text={prompt.text} onComplete={handleTextRevealComplete} />

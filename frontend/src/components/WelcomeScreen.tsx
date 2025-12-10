@@ -1,11 +1,11 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 interface WelcomeScreenProps {
   onStart: (nickname: string, email: string) => void;
-  onViewLeaderboard?: () => void;
 }
 
-export function WelcomeScreen({ onStart, onViewLeaderboard }: WelcomeScreenProps) {
+export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
   const [nickname, setNickname] = useState('');
   const [email, setEmail] = useState('');
   const [errors, setErrors] = useState<{ nickname?: string; email?: string }>({});
@@ -104,17 +104,14 @@ export function WelcomeScreen({ onStart, onViewLeaderboard }: WelcomeScreenProps
         </form>
 
         {/* Leaderboard Link */}
-        {onViewLeaderboard && (
-          <div className="mt-6 text-center">
-            <button
-              type="button"
-              onClick={onViewLeaderboard}
-              className="text-retro-cyan text-xs hover:text-white underline"
-            >
-              VIEW LEADERBOARD
-            </button>
-          </div>
-        )}
+        <div className="mt-6 text-center">
+          <Link
+            to="/leaderboard"
+            className="text-retro-cyan text-xs hover:text-white underline"
+          >
+            VIEW LEADERBOARD
+          </Link>
+        </div>
 
         {/* Footer */}
         <div className="mt-8 text-center">

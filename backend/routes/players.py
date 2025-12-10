@@ -24,7 +24,10 @@ def create_player():
     # Check if player with this email already exists
     existing_player = Player.query.filter_by(email=email).first()
     if existing_player:
-        # Return existing player
+        # Update nickname if different
+        if existing_player.nickname != nickname:
+            existing_player.nickname = nickname
+            db.session.commit()
         return jsonify(existing_player.to_dict()), 200
 
     # Create new player

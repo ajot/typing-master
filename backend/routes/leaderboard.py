@@ -35,10 +35,21 @@ def get_leaderboard():
 
 @leaderboard_bp.route('/leaderboard/all-time', methods=['GET'])
 def get_all_time_leaderboard():
-    """Get all-time top 10 scores"""
-    top_scores = db.session.query(Score, Player).join(Player).order_by(
+    """Get all-time top 10 scores (best score per player)"""
+    # Get all scores ordered by score descending
+    all_scores = db.session.query(Score, Player).join(Player).order_by(
         Score.score.desc()
-    ).limit(10).all()
+    ).all()
+
+    # Filter to keep only best score per player
+    seen_players = set()
+    top_scores = []
+    for score, player in all_scores:
+        if player.id not in seen_players:
+            seen_players.add(player.id)
+            top_scores.append((score, player))
+            if len(top_scores) >= 10:
+                break
 
     leaderboard = []
     for rank, (score, player) in enumerate(top_scores, 1):

@@ -30,6 +30,7 @@ export function useTypingGame({
   const [timeRemaining, setTimeRemaining] = useState(duration);
   const [isComplete, setIsComplete] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const hasCalledComplete = useRef(false);
 
   // Calculate stats
   const calculateStats = useCallback((): GameStats => {
@@ -71,9 +72,10 @@ export function useTypingGame({
     }
   }, [startTime, isComplete]);
 
-  // Handle game completion
+  // Handle game completion - only call once
   useEffect(() => {
-    if (isComplete && onComplete) {
+    if (isComplete && onComplete && !hasCalledComplete.current) {
+      hasCalledComplete.current = true;
       onComplete(calculateStats());
     }
   }, [isComplete, onComplete, calculateStats]);
@@ -108,6 +110,7 @@ export function useTypingGame({
     setStartTime(Date.now());
     setTimeRemaining(duration);
     setIsComplete(false);
+    hasCalledComplete.current = false;
   }, [duration]);
 
   const resetGame = useCallback(() => {
@@ -118,6 +121,7 @@ export function useTypingGame({
     setStartTime(null);
     setTimeRemaining(duration);
     setIsComplete(false);
+    hasCalledComplete.current = false;
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
