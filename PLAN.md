@@ -218,13 +218,30 @@ Example:
 3. Configure Tailwind with custom retro theme
 4. Set up PostgreSQL database schema
 
+**✓ Phase 1 Testing:**
+- [ ] React app runs locally (`npm run dev`) - see welcome page
+- [ ] Flask app runs locally (`flask run`) - see "Hello World" at `/api/health`
+- [ ] Tailwind styles compile without errors
+- [ ] Database tables created successfully (check via psql or pgAdmin)
+
+---
+
 ### Phase 2: Backend API
 5. Create Flask app structure with SQLAlchemy models
-6. Create pre-generated DO-themed typing prompts (20-30 variations)
+6. Seed pre-generated DO-themed typing prompts (20-30 variations)
 7. Implement `/api/players` endpoint
 8. Implement `/api/scores` endpoint
 9. Implement `/api/leaderboard` endpoint
-10. Implement `/api/prompts/random` to return random prompt
+10. Implement `/api/prompts/random` endpoint
+
+**✓ Phase 2 Testing:**
+- [ ] `POST /api/players` - creates player, returns player ID
+- [ ] `GET /api/prompts/random` - returns random prompt from DB
+- [ ] `POST /api/scores` - saves score, returns score ID
+- [ ] `GET /api/leaderboard` - returns today's top 10 scores
+- [ ] Test with curl or Postman to verify all endpoints
+
+---
 
 ### Phase 3: Frontend - Core Game
 11. Create retro CSS styles (scanlines, glow, fonts)
@@ -234,11 +251,34 @@ Example:
 15. Build ResultsScreen component
 16. Build Leaderboard component
 
+**✓ Phase 3 Testing:**
+- [ ] WelcomeScreen renders with form inputs (nickname, email)
+- [ ] TextReveal shows typewriter animation
+- [ ] TypingGame tracks keystrokes, shows correct/incorrect highlighting
+- [ ] Timer counts down from 60 seconds
+- [ ] WPM and accuracy update in real-time
+- [ ] ResultsScreen displays final score
+- [ ] Leaderboard renders mock data
+- [ ] All retro styles render correctly (fonts, colors, scanlines)
+
+---
+
 ### Phase 4: Polish & Integration
 17. Connect frontend to backend API
-18. Add countdown animation before game starts
+18. Add countdown animation (3...2...1...) before game starts
 19. Add 8-bit sound effects (useSound hook + Howler.js)
-20. Test full game flow
+20. Full end-to-end testing
+
+**✓ Phase 4 Testing:**
+- [ ] Player registration saves to database
+- [ ] Random prompt loads from API
+- [ ] Score submits to database after game
+- [ ] Leaderboard shows real data from API
+- [ ] Sound effects play on keypress, error, countdown, game over
+- [ ] Complete a full game flow from welcome to leaderboard
+- [ ] Test edge cases (empty inputs, rapid typing, network errors)
+
+---
 
 ### Phase 5: Deployment
 21. Create Dockerfile for backend
@@ -246,6 +286,16 @@ Example:
 23. Deploy to DigitalOcean App Platform
 24. Configure environment variables
 25. Connect managed PostgreSQL database
+26. Seed prompts to production database
+
+**✓ Phase 5 Testing:**
+- [ ] Backend container builds successfully
+- [ ] App deploys without errors
+- [ ] Frontend loads at production URL
+- [ ] API endpoints work in production
+- [ ] Database connection works
+- [ ] Full game playable in production
+- [ ] Leaderboard persists across sessions
 
 ---
 

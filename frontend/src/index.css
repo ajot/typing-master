@@ -1,0 +1,171 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+@import "tailwindcss";
+
+/* Custom CSS variables for retro theme */
+@theme {
+  --color-do-orange: #FF6B00;
+  --color-retro-green: #00FF00;
+  --color-retro-red: #FF0000;
+  --color-retro-cyan: #00FFFF;
+  --color-retro-gray: #808080;
+  --color-retro-black: #000000;
+  --color-retro-white: #FFFFFF;
+  --font-family-pixel: 'Press Start 2P', cursive;
+  --shadow-retro: 4px 4px 0px #FF6B00;
+  --shadow-retro-lg: 6px 6px 0px #FF6B00;
+}
+
+/* Base styles */
+:root {
+  font-family: 'Press Start 2P', cursive;
+  line-height: 1.5;
+  font-weight: 400;
+  color-scheme: dark;
+  color: #FFFFFF;
+  background-color: #000000;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: #000000;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Scanlines overlay */
+.scanlines {
+  pointer-events: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.15),
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  z-index: 1000;
+}
+
+/* Text glow effect */
+.text-glow {
+  text-shadow: 0 0 5px currentColor, 0 0 10px currentColor;
+}
+
+.text-glow-orange {
+  text-shadow: 0 0 5px #FF6B00, 0 0 10px #FF6B00, 0 0 15px #FF6B00;
+}
+
+.text-glow-green {
+  text-shadow: 0 0 5px #00FF00, 0 0 10px #00FF00;
+}
+
+.text-glow-red {
+  text-shadow: 0 0 5px #FF0000, 0 0 10px #FF0000;
+}
+
+.text-glow-cyan {
+  text-shadow: 0 0 5px #00FFFF, 0 0 10px #00FFFF;
+}
+
+/* Retro button styles */
+.retro-button {
+  font-family: 'Press Start 2P', cursive;
+  background-color: #FF6B00;
+  color: #000000;
+  padding: 0.75rem 1.5rem;
+  border: 4px solid #FFFFFF;
+  cursor: pointer;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  box-shadow: 4px 4px 0px #FFFFFF;
+  transition: all 0.1s ease;
+}
+
+.retro-button:hover {
+  background-color: #FFFFFF;
+  color: #FF6B00;
+}
+
+.retro-button:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px #FFFFFF;
+}
+
+/* Retro input styles */
+.retro-input {
+  font-family: 'Press Start 2P', cursive;
+  background-color: #000000;
+  color: #FF6B00;
+  border: 4px solid #FF6B00;
+  padding: 0.75rem 1rem;
+  font-size: 0.625rem;
+  outline: none;
+  text-transform: uppercase;
+}
+
+.retro-input:focus {
+  border-color: #FFFFFF;
+  color: #FFFFFF;
+}
+
+.retro-input::placeholder {
+  color: rgba(255, 107, 0, 0.5);
+}
+
+/* Retro panel */
+.retro-panel {
+  background-color: #000000;
+  border: 4px solid #FF6B00;
+  padding: 1.5rem;
+  box-shadow: 6px 6px 0px rgba(255, 107, 0, 0.3);
+}
+
+/* Blinking animation */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.animate-blink {
+  animation: blink 1s step-end infinite;
+}
+
+/* Screen shake effect for errors */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+.shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+/* Utility classes */
+.text-do-orange { color: #FF6B00; }
+.text-retro-green { color: #00FF00; }
+.text-retro-red { color: #FF0000; }
+.text-retro-cyan { color: #00FFFF; }
+.text-retro-gray { color: #808080; }
+.bg-do-orange { background-color: #FF6B00; }
+.bg-retro-green { background-color: #00FF00; }
+.bg-retro-red { background-color: #FF0000; }
+.bg-retro-cyan { background-color: #00FFFF; }
+.border-do-orange { border-color: #FF6B00; }
+.border-retro-red { border-color: #FF0000; }
+.border-retro-green { border-color: #00FF00; }
+.border-retro-cyan { border-color: #00FFFF; }
+.border-retro-gray { border-color: #808080; }

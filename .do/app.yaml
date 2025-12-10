@@ -1,0 +1,33 @@
+name: typing-master
+region: nyc
+services:
+  - name: api
+    source_dir: /backend
+    dockerfile_path: backend/Dockerfile
+    http_port: 8080
+    instance_size_slug: apps-s-1vcpu-0.5gb
+    instance_count: 1
+    routes:
+      - path: /api
+    envs:
+      - key: DATABASE_URL
+        scope: RUN_TIME
+        value: ${db.DATABASE_URL}
+
+static_sites:
+  - name: web
+    source_dir: /frontend
+    build_command: npm install && npm run build
+    output_dir: dist
+    routes:
+      - path: /
+    envs:
+      - key: VITE_API_URL
+        scope: BUILD_TIME
+        value: ${APP_URL}
+
+databases:
+  - name: db
+    engine: PG
+    production: false
+    version: "16"
