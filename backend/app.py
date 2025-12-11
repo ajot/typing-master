@@ -1,5 +1,5 @@
 import os
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
 from dotenv import load_dotenv
 from models import db
@@ -7,7 +7,12 @@ from models import db
 load_dotenv()
 
 def create_app():
-    app = Flask(__name__)
+    # Check if static folder exists (production build)
+    static_folder = os.path.join(os.path.dirname(__file__), 'static')
+    if os.path.exists(static_folder):
+        app = Flask(__name__, static_folder='static', static_url_path='')
+    else:
+        app = Flask(__name__)
 
     # Configuration
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
@@ -36,6 +41,22 @@ def create_app():
     @app.route('/api/health')
     def health():
         return jsonify({'status': 'healthy', 'message': 'Typing Master API is running!'})
+
+    # Serve frontend for all non-API routes (SPA support)
+    @app.route('/')
+    def serve_index():
+        if app.static_folder:
+            return send_from_directory(app.static_folder, 'index.html')
+        return jsonify({'error': 'Frontend not built'}), 404
+
+    @app.route('/<path:path>')
+    def serve_static(path):
+        if app.static_folder:
+            # Try to serve the file, fallback to index.html for SPA routing
+            if os.path.exists(os.path.join(app.static_folder, path)):
+                return send_from_directory(app.static_folder, path)
+            return send_from_directory(app.static_folder, 'index.html')
+        return jsonify({'error': 'Frontend not built'}), 404
 
     # Create tables
     with app.app_context():
