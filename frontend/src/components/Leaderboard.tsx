@@ -119,8 +119,8 @@ export function Leaderboard({
         {/* Leaderboard Table */}
         {!isLoading && entries.length > 0 && (
           <div className="space-y-2">
-            {/* Header Row */}
-            <div className="grid grid-cols-12 gap-2 text-retro-gray text-xs px-4 py-2">
+            {/* Header Row - Hidden on mobile, shown on md+ */}
+            <div className="hidden md:grid grid-cols-12 gap-2 text-retro-gray text-xs px-4 py-2">
               <div className="col-span-1">RANK</div>
               <div className="col-span-4">PLAYER</div>
               <div className="col-span-2 text-right">WPM</div>
@@ -133,7 +133,7 @@ export function Leaderboard({
               <div
                 key={entry.rank}
                 className={`
-                  grid grid-cols-12 gap-2 px-4 py-3 rounded
+                  px-4 py-3 rounded
                   ${
                     entry.score === currentPlayerScore
                       ? 'bg-do-orange/20 border border-do-orange/50'
@@ -142,43 +142,75 @@ export function Leaderboard({
                   ${entry.rank <= 3 ? 'border border-retro-gray/30' : ''}
                 `}
               >
-                {/* Rank */}
-                <div
-                  className={`col-span-1 text-lg ${getRankColor(entry.rank)}`}
-                >
-                  {getRankDisplay(entry.rank)}
+                {/* Mobile Layout */}
+                <div className="md:hidden">
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-2">
+                      <span className={`text-lg ${getRankColor(entry.rank)}`}>
+                        {getRankDisplay(entry.rank)}
+                      </span>
+                      <span className="text-white font-bold truncate max-w-[120px]">
+                        {entry.nickname.toUpperCase()}
+                      </span>
+                    </div>
+                    <span className={`text-lg font-bold ${getRankColor(entry.rank)}`}>
+                      {entry.score.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex gap-4 text-xs">
+                    <span className="text-retro-cyan">{entry.wpm} WPM</span>
+                    <span
+                      className={
+                        entry.accuracy >= 95
+                          ? 'text-retro-green'
+                          : entry.accuracy >= 80
+                          ? 'text-do-orange'
+                          : 'text-retro-red'
+                      }
+                    >
+                      {entry.accuracy}% ACC
+                    </span>
+                  </div>
                 </div>
 
-                {/* Player Name */}
-                <div className="col-span-4 text-white truncate">
-                  {entry.nickname.toUpperCase()}
-                </div>
+                {/* Desktop Layout */}
+                <div className="hidden md:grid grid-cols-12 gap-2 items-center">
+                  {/* Rank */}
+                  <div className={`col-span-1 text-lg ${getRankColor(entry.rank)}`}>
+                    {getRankDisplay(entry.rank)}
+                  </div>
 
-                {/* WPM */}
-                <div className="col-span-2 text-right text-retro-cyan">
-                  {entry.wpm}
-                </div>
+                  {/* Player Name */}
+                  <div className="col-span-4 text-white truncate">
+                    {entry.nickname.toUpperCase()}
+                  </div>
 
-                {/* Accuracy */}
-                <div
-                  className={`col-span-2 text-right ${
-                    entry.accuracy >= 95
-                      ? 'text-retro-green'
-                      : entry.accuracy >= 80
-                      ? 'text-do-orange'
-                      : 'text-retro-red'
-                  }`}
-                >
-                  {entry.accuracy}%
-                </div>
+                  {/* WPM */}
+                  <div className="col-span-2 text-right text-retro-cyan">
+                    {entry.wpm}
+                  </div>
 
-                {/* Score */}
-                <div
-                  className={`col-span-3 text-right font-bold ${getRankColor(
-                    entry.rank
-                  )}`}
-                >
-                  {entry.score.toLocaleString()}
+                  {/* Accuracy */}
+                  <div
+                    className={`col-span-2 text-right ${
+                      entry.accuracy >= 95
+                        ? 'text-retro-green'
+                        : entry.accuracy >= 80
+                        ? 'text-do-orange'
+                        : 'text-retro-red'
+                    }`}
+                  >
+                    {entry.accuracy}%
+                  </div>
+
+                  {/* Score */}
+                  <div
+                    className={`col-span-3 text-right font-bold ${getRankColor(
+                      entry.rank
+                    )}`}
+                  >
+                    {entry.score.toLocaleString()}
+                  </div>
                 </div>
               </div>
             ))}
