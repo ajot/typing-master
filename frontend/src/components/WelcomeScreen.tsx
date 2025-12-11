@@ -157,7 +157,7 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
             to="/leaderboard"
             className="text-retro-cyan text-xs hover:text-white underline"
           >
-            VIEW LEADERBOARD <span className="text-retro-gray">[L]</span>
+            VIEW LEADERBOARD <span className="text-retro-cyan">[L]</span>
           </Link>
         </div>
 

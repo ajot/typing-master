@@ -239,14 +239,14 @@ export function Leaderboard({
           <div className="flex gap-4">
             <button onClick={onBack} className="retro-button flex-1">
               {showAutoRefresh ? 'PLAY GAME' : 'BACK'}{' '}
-              <span className="text-retro-gray">{showAutoRefresh ? '[ENTER]' : '[ESC]'}</span>
+              <span className="text-retro-cyan">{showAutoRefresh ? '[ENTER]' : '[ESC]'}</span>
             </button>
             {onPlayAgain && !showAutoRefresh && (
               <button
                 onClick={onPlayAgain}
                 className="retro-button flex-1 bg-do-orange/30 hover:bg-do-orange/40"
               >
-                PLAY AGAIN <span className="text-retro-gray">[ENTER]</span>
+                PLAY AGAIN <span className="text-retro-cyan">[ENTER]</span>
               </button>
             )}
             {onRefresh && showAutoRefresh && (
@@ -254,7 +254,7 @@ export function Leaderboard({
                 onClick={onRefresh}
                 className="retro-button flex-1 bg-retro-cyan/20 hover:bg-retro-cyan/30"
               >
-                REFRESH NOW <span className="text-retro-gray">[R]</span>
+                REFRESH NOW <span className="text-retro-cyan">[R]</span>
               </button>
             )}
           </div>
@@ -263,7 +263,7 @@ export function Leaderboard({
               onClick={onNewPlayer}
               className="retro-button w-full bg-transparent border-retro-gray hover:bg-retro-gray/20"
             >
-              NEW PLAYER <span className="text-retro-gray">[N]</span>
+              NEW PLAYER <span className="text-retro-cyan">[N]</span>
             </button>
           )}
         </div>

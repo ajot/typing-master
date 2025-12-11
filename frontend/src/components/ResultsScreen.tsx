@@ -131,20 +131,20 @@ export function ResultsScreen({
         {/* Actions */}
         <div className="space-y-3">
           <button onClick={onPlayAgain} className="retro-button w-full">
-            PLAY AGAIN <span className="text-retro-gray">[ENTER]</span>
+            PLAY AGAIN <span className="text-retro-cyan">[ENTER]</span>
           </button>
           <button
             onClick={onViewLeaderboard}
             className="retro-button w-full bg-retro-cyan/20 hover:bg-retro-cyan/30"
           >
-            VIEW LEADERBOARD <span className="text-retro-gray">[L]</span>
+            VIEW LEADERBOARD <span className="text-retro-cyan">[L]</span>
           </button>
           {onNewPlayer && (
             <button
               onClick={onNewPlayer}
               className="retro-button w-full bg-transparent border-retro-gray hover:bg-retro-gray/20"
             >
-              NEW PLAYER <span className="text-retro-gray">[N]</span>
+              NEW PLAYER <span className="text-retro-cyan">[N]</span>
             </button>
           )}
         </div>
