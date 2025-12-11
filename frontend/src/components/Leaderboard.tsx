@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import type { LeaderboardEntry } from '../types';
 
 interface LeaderboardProps {
@@ -5,6 +6,7 @@ interface LeaderboardProps {
   currentPlayerScore?: number;
   onBack: () => void;
   onPlayAgain?: () => void;
+  onNewPlayer?: () => void;
   isLoading?: boolean;
   showAutoRefresh?: boolean;
   lastUpdated?: Date;
@@ -16,6 +18,7 @@ export function Leaderboard({
   currentPlayerScore,
   onBack,
   onPlayAgain,
+  onNewPlayer,
   isLoading = false,
   showAutoRefresh = false,
   lastUpdated,
@@ -39,6 +42,46 @@ export function Leaderboard({
   const getRankDisplay = (rank: number) => {
     return rank.toString();
   };
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case 'Enter':
+        case ' ':
+          e.preventDefault();
+          if (showAutoRefresh) {
+            onBack(); // PLAY GAME
+          } else if (onPlayAgain) {
+            onPlayAgain(); // PLAY AGAIN
+          }
+          break;
+        case 'Escape':
+          if (!showAutoRefresh) {
+            e.preventDefault();
+            onBack();
+          }
+          break;
+        case 'n':
+        case 'N':
+          if (onNewPlayer) {
+            e.preventDefault();
+            onNewPlayer();
+          }
+          break;
+        case 'r':
+        case 'R':
+          if (onRefresh && showAutoRefresh) {
+            e.preventDefault();
+            onRefresh();
+          }
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onBack, onPlayAgain, onNewPlayer, onRefresh, showAutoRefresh]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4">
@@ -160,24 +203,35 @@ export function Leaderboard({
         )}
 
         {/* Actions */}
-        <div className="flex gap-4 mt-8">
-          <button onClick={onBack} className="retro-button flex-1">
-            {showAutoRefresh ? 'PLAY GAME' : 'BACK'}
-          </button>
-          {onPlayAgain && !showAutoRefresh && (
-            <button
-              onClick={onPlayAgain}
-              className="retro-button flex-1 bg-do-orange/30 hover:bg-do-orange/40"
-            >
-              PLAY AGAIN
+        <div className="flex flex-col gap-3 mt-8">
+          <div className="flex gap-4">
+            <button onClick={onBack} className="retro-button flex-1">
+              {showAutoRefresh ? 'PLAY GAME' : 'BACK'}{' '}
+              <span className="text-retro-gray">{showAutoRefresh ? '[ENTER]' : '[ESC]'}</span>
             </button>
-          )}
-          {onRefresh && showAutoRefresh && (
+            {onPlayAgain && !showAutoRefresh && (
+              <button
+                onClick={onPlayAgain}
+                className="retro-button flex-1 bg-do-orange/30 hover:bg-do-orange/40"
+              >
+                PLAY AGAIN <span className="text-retro-gray">[ENTER]</span>
+              </button>
+            )}
+            {onRefresh && showAutoRefresh && (
+              <button
+                onClick={onRefresh}
+                className="retro-button flex-1 bg-retro-cyan/20 hover:bg-retro-cyan/30"
+              >
+                REFRESH NOW <span className="text-retro-gray">[R]</span>
+              </button>
+            )}
+          </div>
+          {onNewPlayer && (
             <button
-              onClick={onRefresh}
-              className="retro-button flex-1 bg-retro-cyan/20 hover:bg-retro-cyan/30"
+              onClick={onNewPlayer}
+              className="retro-button w-full bg-transparent border-retro-gray hover:bg-retro-gray/20"
             >
-              REFRESH NOW
+              NEW PLAYER <span className="text-retro-gray">[N]</span>
             </button>
           )}
         </div>

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { SettingsModal } from './SettingsModal';
 
 type WelcomeScreenProps = {
@@ -11,6 +11,23 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
   const [email, setEmail] = useState('');
   const [errors, setErrors] = useState<{ nickname?: string; email?: string }>({});
   const [showSettings, setShowSettings] = useState(false);
+  const navigate = useNavigate();
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger shortcuts when typing in inputs or settings modal is open
+      if (e.target instanceof HTMLInputElement || showSettings) return;
+
+      if (e.key.toLowerCase() === 'l') {
+        e.preventDefault();
+        navigate('/leaderboard');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [navigate, showSettings]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -140,7 +157,7 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
             to="/leaderboard"
             className="text-retro-cyan text-xs hover:text-white underline"
           >
-            VIEW LEADERBOARD
+            VIEW LEADERBOARD <span className="text-retro-gray">[L]</span>
           </Link>
         </div>
 

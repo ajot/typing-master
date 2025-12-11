@@ -41,6 +41,7 @@ export function LeaderboardPage() {
         entries={entries}
         isLoading={isLoading}
         onBack={() => navigate('/')}
+        onNewPlayer={() => navigate('/')}
         showAutoRefresh={true}
         lastUpdated={lastUpdated}
         onRefresh={fetchLeaderboard}

@@ -241,6 +241,7 @@ function App() {
           currentPlayerScore={finalStats?.score}
           onBack={() => setGameState(finalStats ? 'results' : 'welcome')}
           onPlayAgain={player ? handlePlayAgain : undefined}
+          onNewPlayer={handleBackToWelcome}
           isLoading={isLoadingLeaderboard}
         />
       )}

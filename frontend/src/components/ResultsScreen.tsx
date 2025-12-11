@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import type { GameStats } from '../types';
 
 interface ResultsScreenProps {
@@ -33,6 +34,34 @@ export function ResultsScreen({
   };
 
   const performance = getPerformanceMessage();
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case 'Enter':
+        case ' ':
+          e.preventDefault();
+          onPlayAgain();
+          break;
+        case 'l':
+        case 'L':
+          e.preventDefault();
+          onViewLeaderboard();
+          break;
+        case 'n':
+        case 'N':
+          if (onNewPlayer) {
+            e.preventDefault();
+            onNewPlayer();
+          }
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onPlayAgain, onViewLeaderboard, onNewPlayer]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4">
@@ -102,20 +131,20 @@ export function ResultsScreen({
         {/* Actions */}
         <div className="space-y-3">
           <button onClick={onPlayAgain} className="retro-button w-full">
-            PLAY AGAIN
+            PLAY AGAIN <span className="text-retro-gray">[ENTER]</span>
           </button>
           <button
             onClick={onViewLeaderboard}
             className="retro-button w-full bg-retro-cyan/20 hover:bg-retro-cyan/30"
           >
-            VIEW LEADERBOARD
+            VIEW LEADERBOARD <span className="text-retro-gray">[L]</span>
           </button>
           {onNewPlayer && (
             <button
               onClick={onNewPlayer}
               className="retro-button w-full bg-transparent border-retro-gray hover:bg-retro-gray/20"
             >
-              NEW PLAYER
+              NEW PLAYER <span className="text-retro-gray">[N]</span>
             </button>
           )}
         </div>
