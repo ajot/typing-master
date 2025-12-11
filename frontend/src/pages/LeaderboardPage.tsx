@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { LeaderboardEntry } from '../types';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+const API_BASE = import.meta.env.VITE_API_URL || '';
 const REFRESH_INTERVAL = 5000; // Refresh every 5 seconds
 
 export function LeaderboardPage() {

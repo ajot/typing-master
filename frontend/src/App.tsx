@@ -14,7 +14,7 @@ import type {
   LeaderboardEntry,
 } from './types';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+const API_BASE = import.meta.env.VITE_API_URL || '';
 
 function App() {
   const [gameState, setGameState] = useState<GameState>('welcome');
