@@ -7,12 +7,11 @@ from models import db
 load_dotenv()
 
 def create_app():
-    # Check if static folder exists (production build)
+    # Don't use Flask's built-in static serving - we handle it manually for SPA support
+    app = Flask(__name__, static_folder=None)
+
+    # Store static folder path for manual serving
     static_folder = os.path.join(os.path.dirname(__file__), 'static')
-    if os.path.exists(static_folder):
-        app = Flask(__name__, static_folder='static', static_url_path='')
-    else:
-        app = Flask(__name__)
 
     # Configuration
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
@@ -45,17 +44,19 @@ def create_app():
     # Serve frontend for all non-API routes (SPA support)
     @app.route('/')
     def serve_index():
-        if app.static_folder:
-            return send_from_directory(app.static_folder, 'index.html')
+        if os.path.exists(static_folder):
+            return send_from_directory(static_folder, 'index.html')
         return jsonify({'error': 'Frontend not built'}), 404
 
     @app.route('/<path:path>')
     def serve_static(path):
-        if app.static_folder:
+        if os.path.exists(static_folder):
             # Try to serve the file, fallback to index.html for SPA routing
-            if os.path.exists(os.path.join(app.static_folder, path)):
-                return send_from_directory(app.static_folder, path)
-            return send_from_directory(app.static_folder, 'index.html')
+            file_path = os.path.join(static_folder, path)
+            if os.path.exists(file_path) and os.path.isfile(file_path):
+                return send_from_directory(static_folder, path)
+            # Fallback to index.html for SPA client-side routing
+            return send_from_directory(static_folder, 'index.html')
         return jsonify({'error': 'Frontend not built'}), 404
 
     # Create tables
