@@ -71,7 +71,7 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
 
         {/* Title */}
         <h1 className="text-2xl md:text-3xl text-accent text-center mb-2 text-glow-accent">
-          TYPING MASTER
+          TYPE THE CLOUD
         </h1>
         <p className="text-retro-cyan text-center text-xs mb-8">
           DIGITALOCEAN EDITION
