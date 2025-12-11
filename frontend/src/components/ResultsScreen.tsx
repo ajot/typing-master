@@ -39,7 +39,6 @@ export function ResultsScreen({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       switch (e.key) {
-        case 'Enter':
         case ' ':
           e.preventDefault();
           onPlayAgain();
@@ -131,7 +130,7 @@ export function ResultsScreen({
         {/* Actions */}
         <div className="space-y-3">
           <button onClick={onPlayAgain} className="retro-button w-full">
-            PLAY AGAIN <span className="text-retro-cyan">[ENTER]</span>
+            PLAY AGAIN <span className="text-retro-cyan">[SPACE]</span>
           </button>
           <button
             onClick={onViewLeaderboard}

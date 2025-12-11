@@ -47,7 +47,6 @@ export function Leaderboard({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       switch (e.key) {
-        case 'Enter':
         case ' ':
           e.preventDefault();
           if (showAutoRefresh) {
@@ -239,14 +238,14 @@ export function Leaderboard({
           <div className="flex gap-4">
             <button onClick={onBack} className="retro-button flex-1">
               {showAutoRefresh ? 'PLAY GAME' : 'BACK'}{' '}
-              <span className="text-retro-cyan">{showAutoRefresh ? '[ENTER]' : '[ESC]'}</span>
+              <span className="text-retro-cyan">{showAutoRefresh ? '[SPACE]' : '[ESC]'}</span>
             </button>
             {onPlayAgain && !showAutoRefresh && (
               <button
                 onClick={onPlayAgain}
                 className="retro-button flex-1 bg-do-orange/30 hover:bg-do-orange/40"
               >
-                PLAY AGAIN <span className="text-retro-cyan">[ENTER]</span>
+                PLAY AGAIN <span className="text-retro-cyan">[SPACE]</span>
               </button>
             )}
             {onRefresh && showAutoRefresh && (
