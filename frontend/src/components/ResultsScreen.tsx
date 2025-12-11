@@ -18,7 +18,7 @@ export function ResultsScreen({
   // Determine performance message
   const getPerformanceMessage = () => {
     if (stats.wpm >= 80 && stats.accuracy >= 0.95) {
-      return { message: 'LEGENDARY!', color: 'text-do-orange' };
+      return { message: 'LEGENDARY!', color: 'text-accent' };
     }
     if (stats.wpm >= 60 && stats.accuracy >= 0.9) {
       return { message: 'EXCELLENT!', color: 'text-retro-green' };
@@ -53,7 +53,7 @@ export function ResultsScreen({
           {/* Final Score */}
           <div className="retro-panel p-4 col-span-2">
             <p className="text-retro-gray text-xs mb-1">FINAL SCORE</p>
-            <p className="text-4xl text-do-orange text-glow">{stats.score}</p>
+            <p className="text-4xl text-accent text-glow">{stats.score}</p>
           </div>
 
           {/* WPM */}
@@ -70,7 +70,7 @@ export function ResultsScreen({
                 stats.accuracy >= 0.9
                   ? 'text-retro-green'
                   : stats.accuracy >= 0.7
-                  ? 'text-do-orange'
+                  ? 'text-accent'
                   : 'text-retro-red'
               } text-glow`}
             >
