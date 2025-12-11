@@ -6,6 +6,9 @@ interface LeaderboardProps {
   onBack: () => void;
   onPlayAgain?: () => void;
   isLoading?: boolean;
+  showAutoRefresh?: boolean;
+  lastUpdated?: Date;
+  onRefresh?: () => void;
 }
 
 export function Leaderboard({
@@ -14,6 +17,9 @@ export function Leaderboard({
   onBack,
   onPlayAgain,
   isLoading = false,
+  showAutoRefresh = false,
+  lastUpdated,
+  onRefresh,
 }: LeaderboardProps) {
   // Determine rank color
   const getRankColor = (rank: number) => {
@@ -29,18 +35,9 @@ export function Leaderboard({
     }
   };
 
-  // Determine rank icon
-  const getRankIcon = (rank: number) => {
-    switch (rank) {
-      case 1:
-        return '♔';
-      case 2:
-        return '♕';
-      case 3:
-        return '♖';
-      default:
-        return rank.toString();
-    }
+  // Determine rank display
+  const getRankDisplay = (rank: number) => {
+    return rank.toString();
   };
 
   return (
@@ -48,10 +45,15 @@ export function Leaderboard({
       <div className="retro-panel p-8 max-w-2xl w-full">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-2xl text-do-orange text-glow mb-2">
+          <h1 className={`${showAutoRefresh ? 'text-3xl' : 'text-2xl'} text-do-orange text-glow mb-2`}>
             LEADERBOARD
           </h1>
           <p className="text-retro-cyan text-xs">ALL-TIME TOP SCORES</p>
+          {showAutoRefresh && (
+            <p className="text-retro-gray text-xs mt-2">
+              Auto-refreshes every 5 seconds
+            </p>
+          )}
         </div>
 
         {/* Loading State */}
@@ -101,7 +103,7 @@ export function Leaderboard({
                 <div
                   className={`col-span-1 text-lg ${getRankColor(entry.rank)}`}
                 >
-                  {getRankIcon(entry.rank)}
+                  {getRankDisplay(entry.rank)}
                 </div>
 
                 {/* Player Name */}
@@ -150,17 +152,32 @@ export function Leaderboard({
           </div>
         )}
 
+        {/* Last Updated (for auto-refresh mode) */}
+        {showAutoRefresh && lastUpdated && (
+          <div className="text-center mt-6 text-retro-gray text-xs">
+            Last updated: {lastUpdated.toLocaleTimeString()}
+          </div>
+        )}
+
         {/* Actions */}
         <div className="flex gap-4 mt-8">
           <button onClick={onBack} className="retro-button flex-1">
-            BACK
+            {showAutoRefresh ? 'PLAY GAME' : 'BACK'}
           </button>
-          {onPlayAgain && (
+          {onPlayAgain && !showAutoRefresh && (
             <button
               onClick={onPlayAgain}
               className="retro-button flex-1 bg-do-orange/30 hover:bg-do-orange/40"
             >
               PLAY AGAIN
+            </button>
+          )}
+          {onRefresh && showAutoRefresh && (
+            <button
+              onClick={onRefresh}
+              className="retro-button flex-1 bg-retro-cyan/20 hover:bg-retro-cyan/30"
+            >
+              REFRESH NOW
             </button>
           )}
         </div>
