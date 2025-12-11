@@ -11,9 +11,10 @@ def get_leaderboard():
     # Get start of today (UTC)
     today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
 
-    # Query top 10 scores from today
+    # Query top 10 scores from today (exclude hidden players)
     top_scores = db.session.query(Score, Player).join(Player).filter(
-        Score.created_at >= today_start
+        Score.created_at >= today_start,
+        Player.is_hidden == False
     ).order_by(Score.score.desc()).limit(10).all()
 
     leaderboard = []
@@ -36,10 +37,10 @@ def get_leaderboard():
 @leaderboard_bp.route('/leaderboard/all-time', methods=['GET'])
 def get_all_time_leaderboard():
     """Get all-time top 10 scores (best score per player)"""
-    # Get all scores ordered by score descending
-    all_scores = db.session.query(Score, Player).join(Player).order_by(
-        Score.score.desc()
-    ).all()
+    # Get all scores ordered by score descending (exclude hidden players)
+    all_scores = db.session.query(Score, Player).join(Player).filter(
+        Player.is_hidden == False
+    ).order_by(Score.score.desc()).all()
 
     # Filter to keep only best score per player
     seen_players = set()

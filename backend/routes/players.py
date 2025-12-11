@@ -45,3 +45,36 @@ def get_player(player_id):
     if not player:
         return jsonify({'error': 'Player not found'}), 404
     return jsonify(player.to_dict())
+
+
+@players_bp.route('/players', methods=['GET'])
+def list_players():
+    """List all players (admin)"""
+    players = Player.query.order_by(Player.created_at.desc()).all()
+    return jsonify({
+        'players': [p.to_dict() for p in players]
+    })
+
+
+@players_bp.route('/players/<player_id>/hide', methods=['POST'])
+def hide_player(player_id):
+    """Hide a player from the leaderboard (admin)"""
+    player = Player.query.get(player_id)
+    if not player:
+        return jsonify({'error': 'Player not found'}), 404
+
+    player.is_hidden = True
+    db.session.commit()
+    return jsonify(player.to_dict())
+
+
+@players_bp.route('/players/<player_id>/unhide', methods=['POST'])
+def unhide_player(player_id):
+    """Unhide a player from the leaderboard (admin)"""
+    player = Player.query.get(player_id)
+    if not player:
+        return jsonify({'error': 'Player not found'}), 404
+
+    player.is_hidden = False
+    db.session.commit()
+    return jsonify(player.to_dict())

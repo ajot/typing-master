@@ -13,6 +13,7 @@ class Player(db.Model):
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     nickname = db.Column(db.String(50), nullable=False)
     email = db.Column(db.String(255), nullable=False)
+    is_hidden = db.Column(db.Boolean, default=False)  # Hide from leaderboard
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     scores = db.relationship('Score', backref='player', lazy=True)
@@ -22,6 +23,7 @@ class Player(db.Model):
             'id': self.id,
             'nickname': self.nickname,
             'email': self.email,
+            'is_hidden': self.is_hidden,
             'created_at': self.created_at.isoformat()
         }
 
