@@ -14,6 +14,7 @@ class Player(db.Model):
     nickname = db.Column(db.String(50), nullable=False)
     email = db.Column(db.String(255), nullable=False)
     is_hidden = db.Column(db.Boolean, default=False)  # Hide from leaderboard
+    email_type = db.Column(db.String(50), nullable=True)  # Classification: do_employee, company, personal, suspicious, typo
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     scores = db.relationship('Score', backref='player', lazy=True)
@@ -24,6 +25,7 @@ class Player(db.Model):
             'nickname': self.nickname,
             'email': self.email,
             'is_hidden': self.is_hidden,
+            'email_type': self.email_type,
             'created_at': self.created_at.isoformat()
         }
 

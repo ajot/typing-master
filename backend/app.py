@@ -36,6 +36,11 @@ def create_app():
     app.register_blueprint(scores_bp, url_prefix='/api')
     app.register_blueprint(leaderboard_bp, url_prefix='/api')
 
+    # Only register admin routes in development or when explicitly enabled
+    if os.getenv('FLASK_ENV') == 'development' or os.getenv('ENABLE_ADMIN') == 'true':
+        from routes.admin import admin_bp
+        app.register_blueprint(admin_bp)
+
     # Health check endpoint
     @app.route('/api/health')
     def health():
