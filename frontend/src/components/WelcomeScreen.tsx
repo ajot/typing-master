@@ -170,6 +170,18 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
             DIGITALOCEAN
           </p>
         </div>
+
+        {/* QR Code */}
+        <div className="mt-6 text-center">
+          <p className="text-retro-gray text-xs mb-2">
+            SCAN TO PLAY ON YOUR PHONE
+          </p>
+          <img
+            src="/qr-code.png"
+            alt="QR Code to play"
+            className="w-24 h-24 mx-auto"
+          />
+        </div>
       </div>
 
       {/* Settings Modal */}
