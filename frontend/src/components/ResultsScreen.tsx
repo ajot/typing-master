@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { useTypewriter } from '../hooks/useTypewriter';
 import type { GameStats } from '../types';
 
 interface ResultsScreenProps {
@@ -35,6 +36,62 @@ export function ResultsScreen({
 
   const performance = getPerformanceMessage();
 
+  // AI message state
+  const [aiMessage, setAiMessage] = useState<string>('');
+  const [isAiLoading, setIsAiLoading] = useState(true);
+
+  // Typewriter effect for AI message
+  const { displayText: typewriterText, isComplete: typewriterComplete, start: startTypewriter } = useTypewriter({
+    text: aiMessage,
+    speed: 40,
+    startDelay: 200,
+  });
+
+  // Fetch AI-generated performance message
+  useEffect(() => {
+    const fetchAiMessage = async () => {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+
+        const response = await fetch('/api/ai/performance-message', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nickname,
+            wpm: stats.wpm,
+            accuracy: stats.accuracy,
+            score: stats.score,
+          }),
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        if (response.ok) {
+          const data = await response.json();
+          setAiMessage(data.message);
+        } else {
+          setAiMessage(performance.message);
+        }
+      } catch {
+        // Use fallback on error or timeout
+        setAiMessage(performance.message);
+      } finally {
+        setIsAiLoading(false);
+      }
+    };
+
+    fetchAiMessage();
+  }, [nickname, stats.wpm, stats.accuracy, stats.score, performance.message]);
+
+  // Start typewriter when AI message is loaded
+  useEffect(() => {
+    if (!isAiLoading && aiMessage) {
+      startTypewriter();
+    }
+  }, [isAiLoading, aiMessage, startTypewriter]);
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -67,9 +124,28 @@ export function ResultsScreen({
       <div className="retro-panel p-8 max-w-lg w-full text-center">
         {/* Header */}
         <h2 className="text-retro-cyan text-sm mb-2">GAME OVER</h2>
-        <h1 className={`text-3xl ${performance.color} text-glow mb-6`}>
+        <h1 className={`text-3xl ${performance.color} text-glow mb-4`}>
           {performance.message}
         </h1>
+
+        {/* AI Message Box */}
+        <div className="retro-panel p-4 mb-6 border-accent/50 bg-black/50">
+          <p className="text-retro-gray text-xs mb-2">
+            <span className="text-accent">░░</span> Gradient AI WISDOM <span className="text-accent">░░</span>
+          </p>
+          <div className="min-h-[3rem] flex items-center justify-center">
+            {isAiLoading ? (
+              <p className="text-retro-gray text-sm animate-pulse">Generating wisdom...</p>
+            ) : (
+              <p className={`text-white text-sm leading-relaxed ${typewriterComplete ? '' : 'after:content-["▌"] after:animate-pulse after:text-accent'}`}>
+                "{typewriterText}"
+              </p>
+            )}
+          </div>
+          <p className="text-retro-gray text-xs mt-2 opacity-60">
+            - Powered by Gradient AI
+          </p>
+        </div>
 
         {/* Player Name */}
         <p className="text-retro-gray text-xs mb-8">
