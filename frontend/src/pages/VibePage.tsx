@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { Footer } from '../components/Footer';
 
 type Milestone = {
   time: string;
@@ -18,19 +19,23 @@ type Level = {
 
 const TIMELINE: Level[] = [
   {
-    day: 'DEC 10',
-    title: 'LEVEL 1',
-    subtitle: 'THE BUILD',
-    commits: 14,
+    day: 'DEC 12',
+    title: 'LEVEL 4',
+    subtitle: 'THE AI',
+    commits: 1,
     milestones: [
-      { time: '12:27 PM', icon: '>', label: 'GAME START - Project kickoff', highlight: true },
-      { time: '2:29 PM', icon: '*', label: 'CORE COMPLETE - Full typing game', highlight: true },
-      { time: '2:51 PM', icon: '+', label: 'Leaderboard added' },
-      { time: '4:26 PM', icon: '#', label: 'PostgreSQL migration' },
-      { time: '4:29 PM', icon: '!', label: 'DEPLOYED - Live on App Platform', highlight: true },
-      { time: '...', icon: '-', label: 'LATER THAT EVENING', divider: true },
-      { time: '10:04 PM', icon: '@', label: 'Dockerfile for deployment' },
-      { time: '11:59 PM', icon: '~', label: 'Renamed to "Type the Cloud"' },
+      { time: '...', icon: '-', label: 'Added at MLH + DO Hackathon // NYC', divider: true },
+      { time: '8:43 PM', icon: '★', label: 'GRADIENT AI - Dynamic performance messages', highlight: true },
+    ],
+  },
+  {
+    day: 'DEC 12',
+    title: 'LEVEL 3',
+    subtitle: 'THE EXTRAS',
+    commits: 3,
+    milestones: [
+      { time: '2:40 PM', icon: '$', label: 'Admin dashboard' },
+      { time: '3:18 PM', icon: '?', label: 'Documentation' },
     ],
   },
   {
@@ -45,13 +50,19 @@ const TIMELINE: Level[] = [
     ],
   },
   {
-    day: 'DEC 12',
-    title: 'LEVEL 3',
-    subtitle: 'THE EXTRAS',
-    commits: 3,
+    day: 'DEC 10',
+    title: 'LEVEL 1',
+    subtitle: 'THE BUILD',
+    commits: 14,
     milestones: [
-      { time: '2:40 PM', icon: '$', label: 'Admin dashboard' },
-      { time: '3:18 PM', icon: '?', label: 'Documentation' },
+      { time: '12:27 PM', icon: '>', label: 'GAME START - Project kickoff', highlight: true },
+      { time: '2:29 PM', icon: '*', label: 'CORE COMPLETE - Full typing game', highlight: true },
+      { time: '2:51 PM', icon: '+', label: 'Leaderboard added' },
+      { time: '4:26 PM', icon: '#', label: 'PostgreSQL migration' },
+      { time: '4:29 PM', icon: '!', label: 'DEPLOYED - Live on App Platform', highlight: true },
+      { time: '...', icon: '-', label: 'LATER THAT EVENING', divider: true },
+      { time: '10:04 PM', icon: '@', label: 'Dockerfile for deployment' },
+      { time: '11:59 PM', icon: '~', label: 'Renamed to "Type the Cloud"' },
     ],
   },
 ];
@@ -121,13 +132,14 @@ export function VibePage() {
               <div className="flex items-center justify-between mb-4 pb-2 border-b border-retro-gray/30">
                 <div>
                   <span className={`text-sm ${
-                    levelIdx === 0 ? 'text-do-orange' :
-                    levelIdx === 1 ? 'text-retro-cyan' :
-                    'text-retro-green'
+                    levelIdx === 0 ? 'text-purple-400' :
+                    levelIdx === 1 ? 'text-retro-green' :
+                    levelIdx === 2 ? 'text-retro-cyan' :
+                    'text-do-orange'
                   } text-glow`}>
                     {level.title}
                   </span>
-                  <span className="text-retro-gray text-xs ml-2">
+                  <span className="text-do-orange text-sm ml-2 font-bold">
                     {level.subtitle}
                   </span>
                 </div>
@@ -174,19 +186,6 @@ export function VibePage() {
           ))}
         </div>
 
-        {/* Footer */}
-        <div className="text-center mt-8 pt-6 border-t border-retro-gray/30">
-          <p className="text-xs text-retro-gray mb-2">POWERED BY</p>
-          <p className="text-sm">
-            <span className="text-do-orange">CLAUDE</span>
-            <span className="text-retro-gray mx-2">+</span>
-            <span className="text-retro-cyan">DIGITALOCEAN</span>
-          </p>
-          <p className="text-xs text-retro-gray mt-4">
-            App Platform // Managed PostgreSQL // GitHub Auto-Deploy
-          </p>
-        </div>
-
         {/* Play Button */}
         <div className="text-center mt-8">
           <Link
@@ -196,6 +195,9 @@ export function VibePage() {
             PLAY THE GAME
           </Link>
         </div>
+
+        {/* Footer */}
+        <Footer />
       </div>
     </div>
   );

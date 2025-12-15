@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { SettingsModal } from './SettingsModal';
+import { Footer } from './Footer';
 
 type WelcomeScreenProps = {
   onStart: (nickname: string, email: string) => void;
@@ -161,16 +162,6 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
           </Link>
         </div>
 
-        {/* Footer */}
-        <div className="mt-8 text-center">
-          <p className="text-retro-gray text-xs">
-            POWERED BY
-          </p>
-          <p className="text-accent text-xs">
-            DIGITALOCEAN
-          </p>
-        </div>
-
         {/* QR Code */}
         <div className="mt-6 text-center">
           <p className="text-retro-gray text-xs mb-2">
@@ -182,6 +173,9 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
             className="w-24 h-24 mx-auto"
           />
         </div>
+
+        {/* Footer */}
+        <Footer />
       </div>
 
       {/* Settings Modal */}

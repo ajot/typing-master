@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import type { LeaderboardEntry } from '../types';
+import { Footer } from './Footer';
 
 interface LeaderboardProps {
   entries: LeaderboardEntry[];
@@ -268,9 +269,7 @@ export function Leaderboard({
         </div>
 
         {/* Footer */}
-        <div className="text-center mt-6">
-          <p className="text-retro-gray text-xs">POWERED BY DIGITALOCEAN</p>
-        </div>
+        <Footer />
       </div>
     </div>
   );
