@@ -22,10 +22,27 @@ type AdminStats = {
   players: PlayerStats[];
 };
 
+type Prompt = {
+  id: string;
+  text: string;
+  category: string;
+  difficulty: string;
+  is_active: boolean;
+  times_used: number;
+  created_at: string;
+};
+
+type Tab = 'players' | 'prompts';
 type SortField = 'best_score' | 'avg_wpm' | 'avg_accuracy' | null;
 type SortDirection = 'asc' | 'desc';
 
+const CATEGORIES = ['droplets', 'kubernetes', 'app-platform', 'databases', 'spaces', 'gradient-ai', 'general'];
+
 export function AdminPage() {
+  // Tab state
+  const [activeTab, setActiveTab] = useState<Tab>('players');
+
+  // Players state
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [emailFilter, setEmailFilter] = useState('');
   const [doFilter, setDoFilter] = useState<'all' | 'only_do' | 'exclude_do'>('all');
@@ -34,6 +51,16 @@ export function AdminPage() {
   const [error, setError] = useState<string | null>(null);
   const [sortField, setSortField] = useState<SortField>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+
+  // Prompts state
+  const [prompts, setPrompts] = useState<Prompt[]>([]);
+  const [promptsLoading, setPromptsLoading] = useState(false);
+  const [promptsError, setPromptsError] = useState<string | null>(null);
+  const [newPromptText, setNewPromptText] = useState('');
+  const [newPromptCategory, setNewPromptCategory] = useState('general');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [editingPromptId, setEditingPromptId] = useState<string | null>(null);
 
   const fetchStats = async (filter: string = '', doFilterValue: string = 'all') => {
     setIsLoading(true);
@@ -56,9 +83,30 @@ export function AdminPage() {
     }
   };
 
+  const fetchPrompts = async () => {
+    setPromptsLoading(true);
+    setPromptsError(null);
+    try {
+      const res = await fetch(`${API_BASE}/api/prompts`);
+      if (!res.ok) throw new Error('Failed to fetch prompts');
+      const data = await res.json();
+      setPrompts(data);
+    } catch (err) {
+      setPromptsError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setPromptsLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchStats('', doFilter);
   }, [doFilter]);
+
+  useEffect(() => {
+    if (activeTab === 'prompts') {
+      fetchPrompts();
+    }
+  }, [activeTab]);
 
   const handleFilter = (e: React.FormEvent) => {
     e.preventDefault();
@@ -147,20 +195,144 @@ export function AdminPage() {
     }
   };
 
+  // Prompt management functions
+  const togglePromptActive = async (promptId: string, isActive: boolean) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/prompts/${promptId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_active: !isActive })
+      });
+      if (!res.ok) throw new Error('Failed to update prompt');
+      setPrompts(prompts.map(p =>
+        p.id === promptId ? { ...p, is_active: !isActive } : p
+      ));
+    } catch (err) {
+      setPromptsError(err instanceof Error ? err.message : 'Failed to update prompt');
+    }
+  };
+
+  const deletePrompt = async (promptId: string) => {
+    if (!confirm('Are you sure you want to delete this prompt?')) return;
+    try {
+      const res = await fetch(`${API_BASE}/api/prompts/${promptId}`, {
+        method: 'DELETE'
+      });
+      if (!res.ok) throw new Error('Failed to delete prompt');
+      setPrompts(prompts.filter(p => p.id !== promptId));
+    } catch (err) {
+      setPromptsError(err instanceof Error ? err.message : 'Failed to delete prompt');
+    }
+  };
+
+  const generatePrompt = async () => {
+    setIsGenerating(true);
+    setPromptsError(null);
+    try {
+      const res = await fetch(`${API_BASE}/api/prompts/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          category: newPromptCategory
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to generate prompt');
+      setNewPromptText(data.text);
+    } catch (err) {
+      setPromptsError(err instanceof Error ? err.message : 'Failed to generate prompt');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const savePrompt = async () => {
+    if (!newPromptText.trim()) {
+      setPromptsError('Prompt text is required');
+      return;
+    }
+    setIsSaving(true);
+    setPromptsError(null);
+    try {
+      const isEditing = editingPromptId !== null;
+      const url = isEditing
+        ? `${API_BASE}/api/prompts/${editingPromptId}`
+        : `${API_BASE}/api/prompts`;
+      const res = await fetch(url, {
+        method: isEditing ? 'PATCH' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: newPromptText.trim(),
+          category: newPromptCategory,
+          is_active: true
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to save prompt');
+      if (isEditing) {
+        setPrompts(prompts.map(p => p.id === editingPromptId ? data : p));
+      } else {
+        setPrompts([data, ...prompts]);
+      }
+      clearEditor();
+    } catch (err) {
+      setPromptsError(err instanceof Error ? err.message : 'Failed to save prompt');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const editPrompt = (prompt: Prompt) => {
+    setEditingPromptId(prompt.id);
+    setNewPromptText(prompt.text);
+    setNewPromptCategory(prompt.category);
+    setPromptsError(null);
+  };
+
+  const clearEditor = () => {
+    setEditingPromptId(null);
+    setNewPromptText('');
+    setNewPromptCategory('general');
+    setPromptsError(null);
+  };
+
   return (
     <div className="min-h-screen bg-black p-6">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl text-do-orange text-glow mb-1">ADMIN DASHBOARD</h1>
-            <p className="text-retro-gray text-xs">Type the Cloud - Player Stats</p>
+            <p className="text-retro-gray text-xs">Type the Cloud - Management</p>
           </div>
           <Link to="/" className="text-retro-cyan text-xs hover:text-white">
             ← BACK TO GAME
           </Link>
         </div>
 
+        {/* Tabs */}
+        <div className="flex gap-2 mb-6">
+          <button
+            onClick={() => setActiveTab('players')}
+            className={`retro-button text-sm px-6 py-2 ${
+              activeTab === 'players' ? 'bg-do-orange/30 border-do-orange' : 'bg-transparent'
+            }`}
+          >
+            PLAYERS
+          </button>
+          <button
+            onClick={() => setActiveTab('prompts')}
+            className={`retro-button text-sm px-6 py-2 ${
+              activeTab === 'prompts' ? 'bg-do-orange/30 border-do-orange' : 'bg-transparent'
+            }`}
+          >
+            PROMPTS
+          </button>
+        </div>
+
+        {/* Players Tab */}
+        {activeTab === 'players' && (
+          <>
         {/* Stats Cards */}
         {stats && (
           <div className="grid grid-cols-3 gap-4 mb-8">
@@ -372,6 +544,171 @@ export function AdminPage() {
               </div>
             )}
           </div>
+        )}
+          </>
+        )}
+
+        {/* Prompts Tab */}
+        {activeTab === 'prompts' && (
+          <>
+            {/* Editor Panel - Sticky */}
+            <div className="retro-panel p-4 mb-6 sticky top-4 z-10 bg-black">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-retro-cyan text-sm">
+                  {editingPromptId ? 'EDIT PROMPT' : 'CREATE NEW PROMPT'}
+                </h2>
+                {editingPromptId && (
+                  <button
+                    onClick={clearEditor}
+                    className="text-retro-gray text-xs hover:text-white"
+                  >
+                    ✕ CANCEL
+                  </button>
+                )}
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-retro-gray text-xs mb-2">CATEGORY</label>
+                <select
+                  value={newPromptCategory}
+                  onChange={(e) => setNewPromptCategory(e.target.value)}
+                  className="retro-input w-full"
+                >
+                  {CATEGORIES.map(cat => (
+                    <option key={cat} value={cat}>{cat.toUpperCase()}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-retro-gray text-xs mb-2">
+                  PROMPT TEXT
+                  <span className={`ml-2 ${
+                    newPromptText.length < 150 ? 'text-retro-red' :
+                    newPromptText.length > 250 ? 'text-retro-red' :
+                    'text-retro-green'
+                  }`}>
+                    ({newPromptText.length}/150-250 chars)
+                  </span>
+                </label>
+                <textarea
+                  value={newPromptText}
+                  onChange={(e) => setNewPromptText(e.target.value)}
+                  className="retro-input w-full h-24 resize-none"
+                  placeholder="Click a prompt below to edit, or type new text..."
+                />
+              </div>
+
+              <div className="flex gap-4">
+                <button
+                  onClick={generatePrompt}
+                  disabled={isGenerating}
+                  className="retro-button flex-1 bg-purple-500/20 hover:bg-purple-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isGenerating ? 'GENERATING...' : '✨ GENERATE WITH AI'}
+                </button>
+                <button
+                  onClick={savePrompt}
+                  disabled={isSaving || !newPromptText.trim()}
+                  className="retro-button flex-1 bg-retro-green/20 hover:bg-retro-green/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSaving ? 'SAVING...' : editingPromptId ? 'UPDATE PROMPT' : 'SAVE PROMPT'}
+                </button>
+              </div>
+            </div>
+
+            {/* Prompts Error */}
+            {promptsError && (
+              <div className="retro-panel p-4 mb-6 border-retro-red">
+                <p className="text-retro-red text-sm">{promptsError}</p>
+              </div>
+            )}
+
+            {/* Prompts Loading */}
+            {promptsLoading && (
+              <div className="text-center py-12">
+                <p className="text-retro-cyan text-xl animate-pulse">LOADING PROMPTS...</p>
+              </div>
+            )}
+
+            {/* Prompts Table */}
+            {!promptsLoading && (
+              <div className="retro-panel p-4 overflow-visible">
+                <h2 className="text-retro-cyan text-sm mb-4">
+                  PROMPTS ({prompts.length})
+                </h2>
+
+                {prompts.length === 0 ? (
+                  <p className="text-retro-gray text-center py-8">No prompts found</p>
+                ) : (
+                  <div className="overflow-x-auto overflow-y-visible">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="text-retro-gray border-b border-retro-gray/30">
+                          <th className="text-left py-2 px-2">TEXT</th>
+                          <th className="text-center py-2 px-2">CATEGORY</th>
+                          <th className="text-right py-2 px-2">USED</th>
+                          <th className="text-center py-2 px-2">CREATED</th>
+                          <th className="text-center py-2 px-2">ACTIVE</th>
+                          <th className="text-center py-2 px-2">ACTIONS</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {prompts.map((prompt) => (
+                          <tr
+                            key={prompt.id}
+                            onClick={() => editPrompt(prompt)}
+                            className={`border-b border-retro-gray/10 cursor-pointer transition-colors ${
+                              editingPromptId === prompt.id
+                                ? 'bg-do-orange/20 border-l-2 border-l-do-orange'
+                                : 'hover:bg-white/5'
+                            } ${!prompt.is_active ? 'opacity-50' : ''}`}
+                          >
+                            <td className="py-2 px-2 text-white max-w-xs">
+                              <span className="block truncate">
+                                {prompt.text.length > 60 ? prompt.text.slice(0, 60) + '...' : prompt.text}
+                              </span>
+                            </td>
+                            <td className="py-2 px-2 text-center">
+                              <span className="px-2 py-0.5 rounded text-[10px] bg-do-orange/20 text-do-orange">
+                                {prompt.category.toUpperCase()}
+                              </span>
+                            </td>
+                            <td className="py-2 px-2 text-right text-retro-cyan">
+                              {prompt.times_used}
+                            </td>
+                            <td className="py-2 px-2 text-center text-retro-gray">
+                              {new Date(prompt.created_at).toLocaleDateString()}
+                            </td>
+                            <td className="py-2 px-2 text-center">
+                              <button
+                                onClick={(e) => { e.stopPropagation(); togglePromptActive(prompt.id, prompt.is_active); }}
+                                className={`px-3 py-1 rounded text-[10px] transition-colors ${
+                                  prompt.is_active
+                                    ? 'bg-retro-green/30 text-retro-green hover:bg-retro-green/50'
+                                    : 'bg-retro-gray/30 text-retro-gray hover:bg-retro-gray/50'
+                                }`}
+                              >
+                                {prompt.is_active ? 'ON' : 'OFF'}
+                              </button>
+                            </td>
+                            <td className="py-2 px-2 text-center">
+                              <button
+                                onClick={(e) => { e.stopPropagation(); deletePrompt(prompt.id); }}
+                                className="px-3 py-1 rounded text-[10px] bg-retro-red/20 text-retro-red hover:bg-retro-red/40 transition-colors"
+                              >
+                                DELETE
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+          </>
         )}
 
         {/* Footer */}
