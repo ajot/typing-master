@@ -158,7 +158,7 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
 
           {consentConfig?.enabled && (
             <div>
-              <label className="flex items-start gap-3 cursor-pointer">
+              <label className="flex items-start gap-2 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={consented}
@@ -166,15 +166,15 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
                     setConsented(e.target.checked);
                     setErrors((prev) => ({ ...prev, consent: undefined }));
                   }}
-                  className="mt-1 accent-do-orange"
+                  className="mt-0.5 accent-do-orange scale-75"
                 />
-                <span className="text-retro-gray text-xs leading-relaxed">
+                <span className="text-retro-gray text-[10px] leading-relaxed">
                   {consentConfig.label}
                   {consentConfig.required && <span className="text-retro-red"> *</span>}
                 </span>
               </label>
               {errors.consent && (
-                <p className="text-retro-red text-xs mt-1">{errors.consent}</p>
+                <p className="text-retro-red text-[10px] mt-1">{errors.consent}</p>
               )}
             </div>
           )}
