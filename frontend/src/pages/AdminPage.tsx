@@ -87,6 +87,7 @@ export function AdminPage() {
   const [newEventConsentRequired, setNewEventConsentRequired] = useState(true);
   const [newEventLeaderboardTitle, setNewEventLeaderboardTitle] = useState('');
   const [isCreatingEvent, setIsCreatingEvent] = useState(false);
+  const [editingEventId, setEditingEventId] = useState<string | null>(null);
 
   const fetchStats = async (filter: string = '', doFilterValue: string = 'all') => {
     setIsLoading(true);
@@ -340,7 +341,45 @@ export function AdminPage() {
   };
 
   // Event management functions
-  const createEvent = async () => {
+  const buildEventConfig = (): EventData['config'] => {
+    const config: EventData['config'] = {};
+    if (newEventSubtitle.trim()) config.subtitle = newEventSubtitle.trim();
+    if (newEventConsentEnabled) {
+      config.consent = {
+        enabled: true,
+        label: newEventConsentLabel.trim(),
+        required: newEventConsentRequired,
+      };
+    }
+    if (newEventLeaderboardTitle.trim()) config.leaderboard_title = newEventLeaderboardTitle.trim();
+    return config;
+  };
+
+  const clearEventEditor = () => {
+    setEditingEventId(null);
+    setNewEventSlug('');
+    setNewEventName('');
+    setNewEventSubtitle('');
+    setNewEventConsentEnabled(false);
+    setNewEventConsentLabel('I agree to receive emails from DigitalOcean');
+    setNewEventConsentRequired(true);
+    setNewEventLeaderboardTitle('');
+    setEventsError(null);
+  };
+
+  const editEvent = (event: EventData) => {
+    setEditingEventId(event.id);
+    setNewEventSlug(event.slug);
+    setNewEventName(event.name);
+    setNewEventSubtitle(event.config?.subtitle || '');
+    setNewEventConsentEnabled(event.config?.consent?.enabled || false);
+    setNewEventConsentLabel(event.config?.consent?.label || 'I agree to receive emails from DigitalOcean');
+    setNewEventConsentRequired(event.config?.consent?.required ?? true);
+    setNewEventLeaderboardTitle(event.config?.leaderboard_title || '');
+    setEventsError(null);
+  };
+
+  const saveEvent = async () => {
     if (!newEventSlug.trim() || !newEventName.trim()) {
       setEventsError('Slug and name are required');
       return;
@@ -348,41 +387,49 @@ export function AdminPage() {
     setIsCreatingEvent(true);
     setEventsError(null);
     try {
-      const config: EventData['config'] = {};
-      if (newEventSubtitle.trim()) config.subtitle = newEventSubtitle.trim();
-      if (newEventConsentEnabled) {
-        config.consent = {
-          enabled: true,
-          label: newEventConsentLabel.trim(),
-          required: newEventConsentRequired,
-        };
+      const config = buildEventConfig();
+      const isEditing = editingEventId !== null;
+
+      if (isEditing) {
+        const res = await fetch(`${API_BASE}/api/events/${editingEventId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: newEventName.trim(), config }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to update event');
+        setEvents(events.map(e => e.id === editingEventId ? data : e));
+      } else {
+        const res = await fetch(`${API_BASE}/api/events`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            slug: newEventSlug.trim().toLowerCase(),
+            name: newEventName.trim(),
+            config,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to create event');
+        setEvents([data, ...events]);
       }
-      if (newEventLeaderboardTitle.trim()) config.leaderboard_title = newEventLeaderboardTitle.trim();
-
-      const res = await fetch(`${API_BASE}/api/events`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          slug: newEventSlug.trim().toLowerCase(),
-          name: newEventName.trim(),
-          config,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to create event');
-
-      setEvents([data, ...events]);
-      setNewEventSlug('');
-      setNewEventName('');
-      setNewEventSubtitle('');
-      setNewEventConsentEnabled(false);
-      setNewEventConsentLabel('I agree to receive emails from DigitalOcean');
-      setNewEventConsentRequired(true);
-      setNewEventLeaderboardTitle('');
+      clearEventEditor();
     } catch (err) {
-      setEventsError(err instanceof Error ? err.message : 'Failed to create event');
+      setEventsError(err instanceof Error ? err.message : 'Failed to save event');
     } finally {
       setIsCreatingEvent(false);
+    }
+  };
+
+  const deleteEvent = async (eventId: string) => {
+    if (!confirm('Are you sure you want to delete this event? This will also delete all consent records.')) return;
+    try {
+      const res = await fetch(`${API_BASE}/api/events/${eventId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete event');
+      setEvents(events.filter(e => e.id !== eventId));
+      if (editingEventId === eventId) clearEventEditor();
+    } catch (err) {
+      setEventsError(err instanceof Error ? err.message : 'Failed to delete event');
     }
   };
 
@@ -828,9 +875,21 @@ export function AdminPage() {
         {/* Events Tab */}
         {activeTab === 'events' && (
           <>
-            {/* Create Event Form */}
+            {/* Event Editor */}
             <div className="retro-panel p-4 mb-6">
-              <h2 className="text-retro-cyan text-sm mb-4">CREATE NEW EVENT</h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-retro-cyan text-sm">
+                  {editingEventId ? 'EDIT EVENT' : 'CREATE NEW EVENT'}
+                </h2>
+                {editingEventId && (
+                  <button
+                    onClick={clearEventEditor}
+                    className="text-retro-gray text-xs hover:text-white"
+                  >
+                    ✕ CANCEL
+                  </button>
+                )}
+              </div>
 
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
@@ -841,7 +900,11 @@ export function AdminPage() {
                     onChange={(e) => setNewEventSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
                     className="retro-input w-full"
                     placeholder="ai-summit-2026"
+                    disabled={!!editingEventId}
                   />
+                  {editingEventId && (
+                    <p className="text-retro-gray text-[10px] mt-1">Slug cannot be changed after creation</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-retro-gray text-xs mb-2">EVENT NAME</label>
@@ -915,11 +978,11 @@ export function AdminPage() {
               </div>
 
               <button
-                onClick={createEvent}
+                onClick={saveEvent}
                 disabled={isCreatingEvent || !newEventSlug.trim() || !newEventName.trim()}
                 className="retro-button w-full bg-retro-green/20 hover:bg-retro-green/30 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isCreatingEvent ? 'CREATING...' : 'CREATE EVENT'}
+                {isCreatingEvent ? 'SAVING...' : editingEventId ? 'UPDATE EVENT' : 'CREATE EVENT'}
               </button>
             </div>
 
@@ -951,8 +1014,10 @@ export function AdminPage() {
                     {events.map((event) => (
                       <div
                         key={event.id}
-                        className={`p-4 rounded border ${
-                          event.is_active
+                        className={`p-4 rounded border transition-colors ${
+                          editingEventId === event.id
+                            ? 'border-do-orange/50 bg-do-orange/10'
+                            : event.is_active
                             ? 'border-retro-gray/30 bg-black/30'
                             : 'border-retro-gray/10 bg-black/10 opacity-60'
                         }`}
@@ -995,14 +1060,26 @@ export function AdminPage() {
                               COPY URL
                             </button>
                             <button
+                              onClick={() => editEvent(event)}
+                              className="retro-button text-xs px-3 py-1 bg-do-orange/20 hover:bg-do-orange/30"
+                            >
+                              EDIT
+                            </button>
+                            <button
                               onClick={() => toggleEventActive(event.id, event.is_active)}
                               className={`retro-button text-xs px-3 py-1 ${
                                 event.is_active
-                                  ? 'bg-retro-red/20 hover:bg-retro-red/30'
+                                  ? 'bg-retro-gray/20 hover:bg-retro-gray/30'
                                   : 'bg-retro-green/20 hover:bg-retro-green/30'
                               }`}
                             >
                               {event.is_active ? 'DEACTIVATE' : 'ACTIVATE'}
+                            </button>
+                            <button
+                              onClick={() => deleteEvent(event.id)}
+                              className="retro-button text-xs px-3 py-1 bg-retro-red/20 text-retro-red hover:bg-retro-red/40"
+                            >
+                              DELETE
                             </button>
                           </div>
                         </div>

@@ -117,6 +117,24 @@ def update_event(event_id):
     return jsonify(event.to_dict())
 
 
+@events_bp.route('/events/<event_id>', methods=['DELETE'])
+def delete_event(event_id):
+    """Delete an event (admin)"""
+    if os.getenv('FLASK_ENV') != 'development' and os.getenv('ENABLE_ADMIN') != 'true':
+        return jsonify({'error': 'Admin access required'}), 403
+
+    event = Event.query.get(event_id)
+    if not event:
+        return jsonify({'error': 'Event not found'}), 404
+
+    # Delete associated consents first
+    EventConsent.query.filter_by(event_id=event_id).delete()
+    db.session.delete(event)
+    db.session.commit()
+
+    return jsonify({'status': 'ok'}), 200
+
+
 @events_bp.route('/events', methods=['GET'])
 def list_events():
     """List all events (admin)"""

@@ -199,6 +199,11 @@ export function VibePage() {
         {/* Footer */}
         <Footer />
       </div>
+
+      {/* Vibe Coded */}
+      <p className="text-[10px] text-retro-gray/50 text-center mt-3">
+        Built by <a href="https://x.com/amit" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Amit</a> and <a href="https://claude.ai" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Opus 4.5</a>
+      </p>
     </div>
   );
 }
