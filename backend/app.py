@@ -31,12 +31,14 @@ def create_app():
     from routes.scores import scores_bp
     from routes.leaderboard import leaderboard_bp
     from routes.ai import ai_bp
+    from routes.events import events_bp
 
     app.register_blueprint(players_bp, url_prefix='/api')
     app.register_blueprint(prompts_bp, url_prefix='/api')
     app.register_blueprint(scores_bp, url_prefix='/api')
     app.register_blueprint(leaderboard_bp, url_prefix='/api')
     app.register_blueprint(ai_bp, url_prefix='/api')
+    app.register_blueprint(events_bp, url_prefix='/api')
 
     # Only register admin routes in development or when explicitly enabled
     if os.getenv('FLASK_ENV') == 'development' or os.getenv('ENABLE_ADMIN') == 'true':
@@ -75,4 +77,5 @@ def create_app():
 app = create_app()
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=8080)
+    port = int(os.getenv('PORT', 5001))
+    app.run(debug=True, host='0.0.0.0', port=port)

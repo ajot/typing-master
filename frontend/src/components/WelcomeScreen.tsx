@@ -2,17 +2,22 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { SettingsModal } from './SettingsModal';
 import { Footer } from './Footer';
+import { useEvent } from '../contexts/EventContext';
 
 type WelcomeScreenProps = {
-  onStart: (nickname: string, email: string) => void;
+  onStart: (nickname: string, email: string, consented?: boolean) => void;
 };
 
 export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
   const [nickname, setNickname] = useState('');
   const [email, setEmail] = useState('');
-  const [errors, setErrors] = useState<{ nickname?: string; email?: string }>({});
+  const [consented, setConsented] = useState(false);
+  const [errors, setErrors] = useState<{ nickname?: string; email?: string; consent?: string }>({});
   const [showSettings, setShowSettings] = useState(false);
   const navigate = useNavigate();
+  const { event } = useEvent();
+
+  const consentConfig = event?.config?.consent;
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -22,18 +27,18 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
 
       if (e.key.toLowerCase() === 'l') {
         e.preventDefault();
-        navigate('/leaderboard');
+        navigate(event ? `/${event.slug}/leaderboard` : '/leaderboard');
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [navigate, showSettings]);
+  }, [navigate, showSettings, event]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const newErrors: { nickname?: string; email?: string } = {};
+    const newErrors: { nickname?: string; email?: string; consent?: string } = {};
 
     if (!nickname.trim()) {
       newErrors.nickname = 'Nickname required';
@@ -47,12 +52,16 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
       newErrors.email = 'Invalid email';
     }
 
+    if (consentConfig?.enabled && consentConfig.required && !consented) {
+      newErrors.consent = 'Consent is required to continue';
+    }
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
 
-    onStart(nickname.trim(), email.trim());
+    onStart(nickname.trim(), email.trim(), consentConfig?.enabled ? consented : undefined);
   };
 
   return (
@@ -92,7 +101,7 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
           TYPE THE CLOUD
         </h1>
         <p className="text-retro-cyan text-center text-xs mb-8">
-          DIGITALOCEAN EDITION
+          {event?.config?.subtitle || 'DIGITALOCEAN EDITION'}
         </p>
 
         {/* Instructions */}
@@ -147,6 +156,29 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
             )}
           </div>
 
+          {consentConfig?.enabled && (
+            <div>
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={consented}
+                  onChange={(e) => {
+                    setConsented(e.target.checked);
+                    setErrors((prev) => ({ ...prev, consent: undefined }));
+                  }}
+                  className="mt-1 accent-do-orange"
+                />
+                <span className="text-retro-gray text-xs leading-relaxed">
+                  {consentConfig.label}
+                  {consentConfig.required && <span className="text-retro-red"> *</span>}
+                </span>
+              </label>
+              {errors.consent && (
+                <p className="text-retro-red text-xs mt-1">{errors.consent}</p>
+              )}
+            </div>
+          )}
+
           <button type="submit" className="retro-button w-full">
             START GAME
           </button>
@@ -155,23 +187,11 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
         {/* Leaderboard Link */}
         <div className="mt-6 text-center">
           <Link
-            to="/leaderboard"
+            to={event ? `/${event.slug}/leaderboard` : '/leaderboard'}
             className="text-retro-cyan text-xs hover:text-white underline"
           >
             VIEW LEADERBOARD <span className="text-retro-cyan">[L]</span>
           </Link>
-        </div>
-
-        {/* QR Code */}
-        <div className="mt-6 text-center">
-          <p className="text-retro-gray text-xs mb-2">
-            SCAN TO PLAY ON YOUR PHONE
-          </p>
-          <img
-            src="/qr-code.png"
-            alt="QR Code to play"
-            className="w-24 h-24 mx-auto"
-          />
         </div>
 
         {/* Footer */}

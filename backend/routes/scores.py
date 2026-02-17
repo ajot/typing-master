@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
-from models import db, Score, Player, Prompt
+from models import db, Score, Player, Prompt, Event
+from datetime import datetime
 
 scores_bp = Blueprint('scores', __name__)
 
@@ -36,6 +37,21 @@ def create_score():
     if not prompt:
         return jsonify({'error': 'Prompt not found'}), 404
 
+    # Validate event if provided
+    event_id = data.get('event_id')
+    if event_id:
+        event = Event.query.get(event_id)
+        if not event:
+            return jsonify({'error': 'Event not found'}), 404
+
+    # Parse started_at if provided
+    started_at = None
+    if data.get('started_at'):
+        try:
+            started_at = datetime.fromisoformat(data['started_at'].replace('Z', '+00:00'))
+        except (ValueError, AttributeError):
+            pass  # Ignore invalid timestamps
+
     # Calculate final score: WPM × Accuracy × 100
     final_score = int(wpm * accuracy * 100)
 
@@ -44,7 +60,9 @@ def create_score():
         prompt_id=prompt_id,
         wpm=wpm,
         accuracy=accuracy,
-        score=final_score
+        score=final_score,
+        event_id=event_id,
+        started_at=started_at,
     )
     db.session.add(score)
     db.session.commit()

@@ -21,5 +21,3 @@ build/
 
 # OS
 .DS_Store
-
-docs/*

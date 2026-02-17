@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import { TextReveal } from './components/TextReveal';
 import { Countdown } from './components/Countdown';
@@ -6,6 +7,7 @@ import { TypingGame } from './components/TypingGame';
 import { ResultsScreen } from './components/ResultsScreen';
 import { Leaderboard } from './components/Leaderboard';
 import { useSound } from './hooks/useSound';
+import { EventProvider, useEvent } from './contexts/EventContext';
 import type {
   GameState,
   GameStats,
@@ -16,7 +18,7 @@ import type {
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
 
-function App() {
+function AppContent() {
   const [gameState, setGameState] = useState<GameState>('welcome');
   const [player, setPlayer] = useState<Player | null>(null);
   const [prompt, setPrompt] = useState<Prompt | null>(null);
@@ -24,11 +26,82 @@ function App() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [isLoadingLeaderboard, setIsLoadingLeaderboard] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [startedAt, setStartedAt] = useState<string | null>(null);
 
   const { play } = useSound();
+  const { event, isLoading: isEventLoading, error: eventError } = useEvent();
+
+  // Handle countdown tick
+  const handleCountdownTick = useCallback(
+    (count: number) => {
+      if (count > 0) {
+        play('countdown');
+      }
+    },
+    [play]
+  );
+
+  // Handle key press during game
+  const handleKeyPress = useCallback(
+    (isCorrect: boolean) => {
+      if (isCorrect) {
+        play('keypress');
+      } else {
+        play('error');
+      }
+    },
+    [play]
+  );
+
+  // Fetch leaderboard (all-time for easier testing)
+  const fetchLeaderboard = useCallback(async () => {
+    setIsLoadingLeaderboard(true);
+    try {
+      const url = event
+        ? `${API_BASE}/api/leaderboard/all-time?event_id=${event.id}`
+        : `${API_BASE}/api/leaderboard/all-time`;
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        setLeaderboard(data.leaderboard);
+      }
+    } catch (err) {
+      console.error('Failed to fetch leaderboard:', err);
+    } finally {
+      setIsLoadingLeaderboard(false);
+    }
+  }, [event]);
+
+  // Fetch leaderboard when viewing results
+  useEffect(() => {
+    if (gameState === 'results') {
+      fetchLeaderboard();
+    }
+  }, [gameState, fetchLeaderboard]);
+
+  // Show event loading/error states
+  if (isEventLoading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-retro-cyan text-xl animate-pulse">LOADING EVENT...</div>
+      </div>
+    );
+  }
+
+  if (eventError) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="retro-panel p-8 text-center">
+          <h1 className="text-2xl text-retro-red mb-4">EVENT NOT FOUND</h1>
+          <p className="text-retro-gray text-xs mb-4">This event doesn't exist or is no longer active.</p>
+          <a href="/" className="retro-button inline-block">GO HOME</a>
+        </div>
+      </div>
+    );
+  }
 
   // Register player and fetch prompt
-  const handleStart = async (nickname: string, email: string) => {
+  const handleStart = async (nickname: string, email: string, consented?: boolean) => {
     try {
       setError(null);
 
@@ -45,6 +118,25 @@ function App() {
 
       const playerData = await playerRes.json();
       setPlayer(playerData);
+
+      // Record consent for event games
+      if (event) {
+        try {
+          await fetch(`${API_BASE}/api/events/${event.id}/consent`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              player_id: playerData.id,
+              consented: consented ?? null,
+            }),
+          });
+        } catch (err) {
+          console.error('Failed to record consent:', err);
+        }
+      }
+
+      // Capture started_at timestamp
+      setStartedAt(new Date().toISOString());
 
       // Fetch random prompt
       const promptRes = await fetch(`${API_BASE}/api/prompts/random`);
@@ -67,32 +159,10 @@ function App() {
     setGameState('countdown');
   };
 
-  // Handle countdown tick
-  const handleCountdownTick = useCallback(
-    (count: number) => {
-      if (count > 0) {
-        play('countdown');
-      }
-    },
-    [play]
-  );
-
   // Handle countdown complete
   const handleCountdownComplete = () => {
     setGameState('playing');
   };
-
-  // Handle key press during game
-  const handleKeyPress = useCallback(
-    (isCorrect: boolean) => {
-      if (isCorrect) {
-        play('keypress');
-      } else {
-        play('error');
-      }
-    },
-    [play]
-  );
 
   // Handle game complete
   const handleGameComplete = async (stats: GameStats) => {
@@ -110,6 +180,8 @@ function App() {
             prompt_id: prompt.id,
             wpm: stats.wpm,
             accuracy: stats.accuracy,
+            event_id: event?.id,
+            started_at: startedAt,
           }),
         });
         if (!res.ok) {
@@ -126,22 +198,6 @@ function App() {
     }
 
     setGameState('results');
-  };
-
-  // Fetch leaderboard (all-time for easier testing)
-  const fetchLeaderboard = async () => {
-    setIsLoadingLeaderboard(true);
-    try {
-      const res = await fetch(`${API_BASE}/api/leaderboard/all-time`);
-      if (res.ok) {
-        const data = await res.json();
-        setLeaderboard(data.leaderboard);
-      }
-    } catch (err) {
-      console.error('Failed to fetch leaderboard:', err);
-    } finally {
-      setIsLoadingLeaderboard(false);
-    }
   };
 
   // Handle view leaderboard
@@ -164,6 +220,7 @@ function App() {
     }
 
     setFinalStats(null);
+    setStartedAt(new Date().toISOString());
     setGameState('getReady');
   };
 
@@ -174,13 +231,6 @@ function App() {
     setFinalStats(null);
     setGameState('welcome');
   };
-
-  // Fetch leaderboard when viewing results
-  useEffect(() => {
-    if (gameState === 'results') {
-      fetchLeaderboard();
-    }
-  }, [gameState]);
 
   return (
     <div className="min-h-screen bg-black">
@@ -243,9 +293,20 @@ function App() {
           onPlayAgain={player ? handlePlayAgain : undefined}
           onNewPlayer={handleBackToWelcome}
           isLoading={isLoadingLeaderboard}
+          title={event?.config?.leaderboard_title}
         />
       )}
     </div>
+  );
+}
+
+function App() {
+  const { eventSlug } = useParams<{ eventSlug?: string }>();
+
+  return (
+    <EventProvider eventSlug={eventSlug}>
+      <AppContent />
+    </EventProvider>
   );
 }
 

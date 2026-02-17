@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from models import db, Score, Player
 from datetime import datetime, timedelta
 from sqlalchemy import func
@@ -11,10 +11,15 @@ def get_leaderboard():
     # Get start of today (UTC)
     today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
 
+    # Filter by event_id if provided, otherwise show only default (non-event) scores
+    event_id = request.args.get('event_id')
+    event_filter = Score.event_id == event_id if event_id else Score.event_id.is_(None)
+
     # Query top 10 scores from today (exclude hidden players)
     top_scores = db.session.query(Score, Player).join(Player).filter(
         Score.created_at >= today_start,
-        Player.is_hidden == False
+        Player.is_hidden == False,
+        event_filter
     ).order_by(Score.score.desc()).limit(10).all()
 
     leaderboard = []
@@ -37,9 +42,14 @@ def get_leaderboard():
 @leaderboard_bp.route('/leaderboard/all-time', methods=['GET'])
 def get_all_time_leaderboard():
     """Get all-time top 10 scores (best score per player)"""
+    # Filter by event_id if provided, otherwise show only default (non-event) scores
+    event_id = request.args.get('event_id')
+    event_filter = Score.event_id == event_id if event_id else Score.event_id.is_(None)
+
     # Get all scores ordered by score descending (exclude hidden players)
     all_scores = db.session.query(Score, Player).join(Player).filter(
-        Player.is_hidden == False
+        Player.is_hidden == False,
+        event_filter
     ).order_by(Score.score.desc()).all()
 
     # Filter to keep only best score per player

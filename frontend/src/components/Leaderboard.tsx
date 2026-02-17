@@ -12,6 +12,7 @@ interface LeaderboardProps {
   showAutoRefresh?: boolean;
   lastUpdated?: Date;
   onRefresh?: () => void;
+  title?: string;
 }
 
 export function Leaderboard({
@@ -24,6 +25,7 @@ export function Leaderboard({
   showAutoRefresh = false,
   lastUpdated,
   onRefresh,
+  title,
 }: LeaderboardProps) {
   // Determine rank color
   const getRankColor = (rank: number) => {
@@ -89,7 +91,7 @@ export function Leaderboard({
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className={`${showAutoRefresh ? 'text-3xl' : 'text-2xl'} text-do-orange text-glow mb-2`}>
-            LEADERBOARD
+            {title || 'LEADERBOARD'}
           </h1>
           <p className="text-retro-cyan text-xs">ALL-TIME TOP SCORES</p>
           {showAutoRefresh && (

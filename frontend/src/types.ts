@@ -40,6 +40,24 @@ export type LeaderboardResponse = {
   leaderboard: LeaderboardEntry[];
 };
 
+export type EventConsentConfig = {
+  enabled: boolean;
+  label: string;
+  required: boolean;
+};
+
+export type EventConfig = {
+  id: string;
+  slug: string;
+  name: string;
+  is_active: boolean;
+  config: {
+    subtitle?: string;
+    consent?: EventConsentConfig;
+    leaderboard_title?: string;
+  };
+};
+
 export type GameState = 'welcome' | 'getReady' | 'countdown' | 'playing' | 'results' | 'leaderboard';
 
 export type GameStats = {

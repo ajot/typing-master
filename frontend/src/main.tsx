@@ -17,6 +17,8 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/leaderboard" element={<LeaderboardPage />} />
           <Route path="/vibe" element={<VibePage />} />
           {import.meta.env.DEV && <Route path="/admin" element={<AdminPage />} />}
+          <Route path="/:eventSlug/leaderboard" element={<LeaderboardPage />} />
+          <Route path="/:eventSlug" element={<App />} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>

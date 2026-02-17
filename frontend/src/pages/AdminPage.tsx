@@ -32,7 +32,20 @@ type Prompt = {
   created_at: string;
 };
 
-type Tab = 'players' | 'prompts';
+type EventData = {
+  id: string;
+  slug: string;
+  name: string;
+  is_active: boolean;
+  config: {
+    subtitle?: string;
+    consent?: { enabled: boolean; label: string; required: boolean };
+    leaderboard_title?: string;
+  };
+  created_at: string;
+};
+
+type Tab = 'players' | 'prompts' | 'events';
 type SortField = 'best_score' | 'avg_wpm' | 'avg_accuracy' | null;
 type SortDirection = 'asc' | 'desc';
 
@@ -61,6 +74,19 @@ export function AdminPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editingPromptId, setEditingPromptId] = useState<string | null>(null);
+
+  // Events state
+  const [events, setEvents] = useState<EventData[]>([]);
+  const [eventsLoading, setEventsLoading] = useState(false);
+  const [eventsError, setEventsError] = useState<string | null>(null);
+  const [newEventSlug, setNewEventSlug] = useState('');
+  const [newEventName, setNewEventName] = useState('');
+  const [newEventSubtitle, setNewEventSubtitle] = useState('');
+  const [newEventConsentEnabled, setNewEventConsentEnabled] = useState(false);
+  const [newEventConsentLabel, setNewEventConsentLabel] = useState('I agree to receive emails from DigitalOcean');
+  const [newEventConsentRequired, setNewEventConsentRequired] = useState(true);
+  const [newEventLeaderboardTitle, setNewEventLeaderboardTitle] = useState('');
+  const [isCreatingEvent, setIsCreatingEvent] = useState(false);
 
   const fetchStats = async (filter: string = '', doFilterValue: string = 'all') => {
     setIsLoading(true);
@@ -102,9 +128,26 @@ export function AdminPage() {
     fetchStats('', doFilter);
   }, [doFilter]);
 
+  const fetchEvents = async () => {
+    setEventsLoading(true);
+    setEventsError(null);
+    try {
+      const res = await fetch(`${API_BASE}/api/events`);
+      if (!res.ok) throw new Error('Failed to fetch events');
+      const data = await res.json();
+      setEvents(data);
+    } catch (err) {
+      setEventsError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setEventsLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (activeTab === 'prompts') {
       fetchPrompts();
+    } else if (activeTab === 'events') {
+      fetchEvents();
     }
   }, [activeTab]);
 
@@ -296,6 +339,69 @@ export function AdminPage() {
     setPromptsError(null);
   };
 
+  // Event management functions
+  const createEvent = async () => {
+    if (!newEventSlug.trim() || !newEventName.trim()) {
+      setEventsError('Slug and name are required');
+      return;
+    }
+    setIsCreatingEvent(true);
+    setEventsError(null);
+    try {
+      const config: EventData['config'] = {};
+      if (newEventSubtitle.trim()) config.subtitle = newEventSubtitle.trim();
+      if (newEventConsentEnabled) {
+        config.consent = {
+          enabled: true,
+          label: newEventConsentLabel.trim(),
+          required: newEventConsentRequired,
+        };
+      }
+      if (newEventLeaderboardTitle.trim()) config.leaderboard_title = newEventLeaderboardTitle.trim();
+
+      const res = await fetch(`${API_BASE}/api/events`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          slug: newEventSlug.trim().toLowerCase(),
+          name: newEventName.trim(),
+          config,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to create event');
+
+      setEvents([data, ...events]);
+      setNewEventSlug('');
+      setNewEventName('');
+      setNewEventSubtitle('');
+      setNewEventConsentEnabled(false);
+      setNewEventConsentLabel('I agree to receive emails from DigitalOcean');
+      setNewEventConsentRequired(true);
+      setNewEventLeaderboardTitle('');
+    } catch (err) {
+      setEventsError(err instanceof Error ? err.message : 'Failed to create event');
+    } finally {
+      setIsCreatingEvent(false);
+    }
+  };
+
+  const toggleEventActive = async (eventId: string, isActive: boolean) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/events/${eventId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_active: !isActive }),
+      });
+      if (!res.ok) throw new Error('Failed to update event');
+      setEvents(events.map(e =>
+        e.id === eventId ? { ...e, is_active: !isActive } : e
+      ));
+    } catch (err) {
+      setEventsError(err instanceof Error ? err.message : 'Failed to update event');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-black p-6">
       <div className="max-w-6xl mx-auto">
@@ -327,6 +433,14 @@ export function AdminPage() {
             }`}
           >
             PROMPTS
+          </button>
+          <button
+            onClick={() => setActiveTab('events')}
+            className={`retro-button text-sm px-6 py-2 ${
+              activeTab === 'events' ? 'bg-do-orange/30 border-do-orange' : 'bg-transparent'
+            }`}
+          >
+            EVENTS
           </button>
         </div>
 
@@ -704,6 +818,196 @@ export function AdminPage() {
                         ))}
                       </tbody>
                     </table>
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Events Tab */}
+        {activeTab === 'events' && (
+          <>
+            {/* Create Event Form */}
+            <div className="retro-panel p-4 mb-6">
+              <h2 className="text-retro-cyan text-sm mb-4">CREATE NEW EVENT</h2>
+
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-retro-gray text-xs mb-2">SLUG (URL PATH)</label>
+                  <input
+                    type="text"
+                    value={newEventSlug}
+                    onChange={(e) => setNewEventSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
+                    className="retro-input w-full"
+                    placeholder="ai-summit-2026"
+                  />
+                </div>
+                <div>
+                  <label className="block text-retro-gray text-xs mb-2">EVENT NAME</label>
+                  <input
+                    type="text"
+                    value={newEventName}
+                    onChange={(e) => setNewEventName(e.target.value)}
+                    className="retro-input w-full"
+                    placeholder="AI Summit NYC 2026"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-retro-gray text-xs mb-2">SUBTITLE (OPTIONAL)</label>
+                  <input
+                    type="text"
+                    value={newEventSubtitle}
+                    onChange={(e) => setNewEventSubtitle(e.target.value)}
+                    className="retro-input w-full"
+                    placeholder="AI SUMMIT EDITION"
+                  />
+                </div>
+                <div>
+                  <label className="block text-retro-gray text-xs mb-2">LEADERBOARD TITLE (OPTIONAL)</label>
+                  <input
+                    type="text"
+                    value={newEventLeaderboardTitle}
+                    onChange={(e) => setNewEventLeaderboardTitle(e.target.value)}
+                    className="retro-input w-full"
+                    placeholder="AI SUMMIT LEADERBOARD"
+                  />
+                </div>
+              </div>
+
+              {/* Consent Config */}
+              <div className="mb-4 p-3 bg-black/30 rounded">
+                <label className="flex items-center gap-3 cursor-pointer mb-3">
+                  <input
+                    type="checkbox"
+                    checked={newEventConsentEnabled}
+                    onChange={(e) => setNewEventConsentEnabled(e.target.checked)}
+                    className="accent-do-orange"
+                  />
+                  <span className="text-retro-gray text-xs">ENABLE CONSENT CHECKBOX</span>
+                </label>
+
+                {newEventConsentEnabled && (
+                  <div className="space-y-3 pl-6">
+                    <div>
+                      <label className="block text-retro-gray text-xs mb-2">CONSENT LABEL</label>
+                      <input
+                        type="text"
+                        value={newEventConsentLabel}
+                        onChange={(e) => setNewEventConsentLabel(e.target.value)}
+                        className="retro-input w-full"
+                      />
+                    </div>
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={newEventConsentRequired}
+                        onChange={(e) => setNewEventConsentRequired(e.target.checked)}
+                        className="accent-do-orange"
+                      />
+                      <span className="text-retro-gray text-xs">REQUIRED TO PLAY</span>
+                    </label>
+                  </div>
+                )}
+              </div>
+
+              <button
+                onClick={createEvent}
+                disabled={isCreatingEvent || !newEventSlug.trim() || !newEventName.trim()}
+                className="retro-button w-full bg-retro-green/20 hover:bg-retro-green/30 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isCreatingEvent ? 'CREATING...' : 'CREATE EVENT'}
+              </button>
+            </div>
+
+            {/* Events Error */}
+            {eventsError && (
+              <div className="retro-panel p-4 mb-6 border-retro-red">
+                <p className="text-retro-red text-sm">{eventsError}</p>
+              </div>
+            )}
+
+            {/* Events Loading */}
+            {eventsLoading && (
+              <div className="text-center py-12">
+                <p className="text-retro-cyan text-xl animate-pulse">LOADING EVENTS...</p>
+              </div>
+            )}
+
+            {/* Events List */}
+            {!eventsLoading && (
+              <div className="retro-panel p-4">
+                <h2 className="text-retro-cyan text-sm mb-4">
+                  EVENTS ({events.length})
+                </h2>
+
+                {events.length === 0 ? (
+                  <p className="text-retro-gray text-center py-8">No events created yet</p>
+                ) : (
+                  <div className="space-y-3">
+                    {events.map((event) => (
+                      <div
+                        key={event.id}
+                        className={`p-4 rounded border ${
+                          event.is_active
+                            ? 'border-retro-gray/30 bg-black/30'
+                            : 'border-retro-gray/10 bg-black/10 opacity-60'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-1">
+                              <span className="text-white text-sm">{event.name}</span>
+                              <span className={`px-2 py-0.5 rounded text-[10px] ${
+                                event.is_active
+                                  ? 'bg-retro-green/20 text-retro-green'
+                                  : 'bg-retro-gray/20 text-retro-gray'
+                              }`}>
+                                {event.is_active ? 'ACTIVE' : 'INACTIVE'}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-4 text-xs">
+                              <span className="text-retro-cyan">/{event.slug}</span>
+                              {event.config?.subtitle && (
+                                <span className="text-retro-gray">{event.config.subtitle}</span>
+                              )}
+                              {event.config?.consent?.enabled && (
+                                <span className="text-do-orange">
+                                  CONSENT {event.config.consent.required ? '(REQUIRED)' : '(OPTIONAL)'}
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-retro-gray text-[10px] mt-1">
+                              Created {new Date(event.created_at).toLocaleDateString()}
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(`${window.location.origin}/${event.slug}`);
+                              }}
+                              className="retro-button text-xs px-3 py-1 bg-retro-cyan/20 hover:bg-retro-cyan/30"
+                              title="Copy event URL"
+                            >
+                              COPY URL
+                            </button>
+                            <button
+                              onClick={() => toggleEventActive(event.id, event.is_active)}
+                              className={`retro-button text-xs px-3 py-1 ${
+                                event.is_active
+                                  ? 'bg-retro-red/20 hover:bg-retro-red/30'
+                                  : 'bg-retro-green/20 hover:bg-retro-green/30'
+                              }`}
+                            >
+                              {event.is_active ? 'DEACTIVATE' : 'ACTIVATE'}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
