@@ -45,6 +45,24 @@ type EventData = {
   created_at: string;
 };
 
+type EventPlayer = {
+  nickname: string;
+  email: string;
+  email_type: string | null;
+  consented: boolean | null;
+  ip_address: string | null;
+  joined_event_at: string | null;
+  games_played: number;
+};
+
+type EventPlayersData = {
+  event_id: string;
+  event_name: string;
+  total_players: number;
+  total_games: number;
+  players: EventPlayer[];
+};
+
 type Tab = 'players' | 'prompts' | 'events';
 type SortField = 'best_score' | 'avg_wpm' | 'avg_accuracy' | null;
 type SortDirection = 'asc' | 'desc';
@@ -88,6 +106,11 @@ export function AdminPage() {
   const [newEventLeaderboardTitle, setNewEventLeaderboardTitle] = useState('');
   const [isCreatingEvent, setIsCreatingEvent] = useState(false);
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
+
+  // Event players state
+  const [expandedEventId, setExpandedEventId] = useState<string | null>(null);
+  const [eventPlayersCache, setEventPlayersCache] = useState<Record<string, EventPlayersData>>({});
+  const [eventPlayersLoading, setEventPlayersLoading] = useState(false);
 
   const fetchStats = async (filter: string = '', doFilterValue: string = 'all') => {
     setIsLoading(true);
@@ -431,6 +454,57 @@ export function AdminPage() {
     } catch (err) {
       setEventsError(err instanceof Error ? err.message : 'Failed to delete event');
     }
+  };
+
+  const fetchEventPlayers = async (eventId: string) => {
+    if (expandedEventId === eventId) {
+      setExpandedEventId(null);
+      return;
+    }
+    setExpandedEventId(eventId);
+    if (eventPlayersCache[eventId]) return;
+    setEventPlayersLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/events/${eventId}/players`);
+      if (!res.ok) throw new Error('Failed to fetch event players');
+      const data = await res.json();
+      setEventPlayersCache(prev => ({ ...prev, [eventId]: data }));
+    } catch (err) {
+      setEventsError(err instanceof Error ? err.message : 'Failed to fetch event players');
+      setExpandedEventId(null);
+    } finally {
+      setEventPlayersLoading(false);
+    }
+  };
+
+  const exportEventCSV = (eventId: string) => {
+    const data = eventPlayersCache[eventId];
+    if (!data || data.players.length === 0) return;
+
+    const headers = ['Nickname', 'Email', 'Type', 'Consented', 'IP Address', 'Joined At', 'Games Played'];
+    const rows = data.players.map(p => [
+      p.nickname,
+      p.email,
+      p.email_type === 'do_employee' ? 'Shark' : (p.email_type || ''),
+      p.consented === true ? 'Yes' : p.consented === false ? 'No' : 'N/A',
+      p.ip_address || '',
+      p.joined_event_at ? new Date(p.joined_event_at).toLocaleString() : '',
+      p.games_played
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    const eventSlug = events.find(e => e.id === eventId)?.slug || eventId;
+    link.download = `event-${eventSlug}-players-${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
   const toggleEventActive = async (eventId: string, isActive: boolean) => {
@@ -1051,6 +1125,16 @@ export function AdminPage() {
                           </div>
                           <div className="flex gap-2">
                             <button
+                              onClick={() => fetchEventPlayers(event.id)}
+                              className={`retro-button text-xs px-3 py-1 ${
+                                expandedEventId === event.id
+                                  ? 'bg-purple-500/30 text-purple-400'
+                                  : 'bg-purple-500/20 hover:bg-purple-500/30 text-purple-400'
+                              }`}
+                            >
+                              {expandedEventId === event.id ? 'HIDE PLAYERS' : 'VIEW PLAYERS'}
+                            </button>
+                            <button
                               onClick={() => {
                                 navigator.clipboard.writeText(`${window.location.origin}/${event.slug}`);
                               }}
@@ -1083,6 +1167,107 @@ export function AdminPage() {
                             </button>
                           </div>
                         </div>
+
+                        {/* Event Players Expansion */}
+                        {expandedEventId === event.id && (
+                          <div className="mt-4 pt-4 border-t border-retro-gray/20">
+                            {eventPlayersLoading && !eventPlayersCache[event.id] ? (
+                              <p className="text-retro-cyan text-xs animate-pulse text-center py-4">LOADING PLAYERS...</p>
+                            ) : eventPlayersCache[event.id] ? (
+                              <>
+                                {/* Summary stats */}
+                                <div className="flex items-center gap-6 mb-4">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-retro-gray text-xs">PLAYERS:</span>
+                                    <span className="text-do-orange text-sm">{eventPlayersCache[event.id].total_players}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-retro-gray text-xs">TOTAL GAMES:</span>
+                                    <span className="text-retro-cyan text-sm">{eventPlayersCache[event.id].total_games}</span>
+                                  </div>
+                                  <button
+                                    onClick={() => exportEventCSV(event.id)}
+                                    disabled={eventPlayersCache[event.id].players.length === 0}
+                                    className="retro-button text-xs px-3 py-1 bg-retro-cyan/20 hover:bg-retro-cyan/30 disabled:opacity-50 disabled:cursor-not-allowed ml-auto"
+                                  >
+                                    EXPORT CSV
+                                  </button>
+                                </div>
+
+                                {/* Players table */}
+                                {eventPlayersCache[event.id].players.length === 0 ? (
+                                  <p className="text-retro-gray text-center py-4 text-xs">No players registered for this event</p>
+                                ) : (
+                                  <div className="overflow-x-auto">
+                                    <table className="w-full text-xs">
+                                      <thead>
+                                        <tr className="text-retro-gray border-b border-retro-gray/30">
+                                          <th className="text-left py-2 px-2">NICKNAME</th>
+                                          <th className="text-left py-2 px-2">EMAIL</th>
+                                          <th className="text-center py-2 px-2">TYPE</th>
+                                          <th className="text-center py-2 px-2">CONSENTED</th>
+                                          <th className="text-left py-2 px-2">IP</th>
+                                          <th className="text-left py-2 px-2">JOINED AT</th>
+                                          <th className="text-right py-2 px-2">GAMES</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {eventPlayersCache[event.id].players.map((player, idx) => (
+                                          <tr
+                                            key={idx}
+                                            className="border-b border-retro-gray/10 hover:bg-white/5"
+                                          >
+                                            <td className="py-2 px-2 text-white">
+                                              {player.nickname.toUpperCase()}
+                                            </td>
+                                            <td className="py-2 px-2 text-retro-gray">
+                                              {player.email}
+                                            </td>
+                                            <td className="py-2 px-2 text-center">
+                                              {player.email_type ? (
+                                                <span className={`px-2 py-0.5 rounded text-[10px] ${
+                                                  player.email_type === 'do_employee' ? 'bg-retro-cyan/20 text-retro-cyan' :
+                                                  player.email_type === 'company' ? 'bg-purple-500/20 text-purple-400' :
+                                                  player.email_type === 'personal' ? 'bg-retro-green/20 text-retro-green' :
+                                                  player.email_type === 'typo' ? 'bg-yellow-500/20 text-yellow-400' :
+                                                  'bg-retro-red/20 text-retro-red'
+                                                }`}>
+                                                  {player.email_type === 'do_employee' ? 'SHARK' : player.email_type.toUpperCase()}
+                                                </span>
+                                              ) : (
+                                                <span className="text-retro-gray">-</span>
+                                              )}
+                                            </td>
+                                            <td className="py-2 px-2 text-center">
+                                              {player.consented === true ? (
+                                                <span className="text-retro-green">YES</span>
+                                              ) : player.consented === false ? (
+                                                <span className="text-retro-red">NO</span>
+                                              ) : (
+                                                <span className="text-retro-gray">-</span>
+                                              )}
+                                            </td>
+                                            <td className="py-2 px-2 text-retro-gray text-[10px]">
+                                              {player.ip_address || '-'}
+                                            </td>
+                                            <td className="py-2 px-2 text-retro-gray text-[10px]">
+                                              {player.joined_event_at
+                                                ? new Date(player.joined_event_at).toLocaleString()
+                                                : '-'}
+                                            </td>
+                                            <td className="py-2 px-2 text-right text-retro-cyan">
+                                              {player.games_played}
+                                            </td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                )}
+                              </>
+                            ) : null}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

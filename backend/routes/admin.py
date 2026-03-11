@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from sqlalchemy import func, or_, cast, Numeric
-from models import db, Player, Score
+from models import db, Player, Score, Event, EventConsent
 import re
 
 admin_bp = Blueprint('admin', __name__)
@@ -248,4 +248,54 @@ def analyze_emails():
         'analyzed': len(players),
         'updated': updated,
         'results': results
+    })
+
+
+@admin_bp.route('/api/admin/events/<event_id>/players', methods=['GET'])
+def get_event_players(event_id):
+    """Get players who participated in a specific event via consent records"""
+    event = Event.query.get(event_id)
+    if not event:
+        return jsonify({'error': 'Event not found'}), 404
+
+    # Query: event_consents joined with players, left join scores for game count
+    results = db.session.query(
+        Player.nickname,
+        Player.email,
+        Player.email_type,
+        EventConsent.consented,
+        EventConsent.ip_address,
+        EventConsent.created_at.label('joined_event_at'),
+        func.count(Score.id).label('games_played')
+    ).join(
+        Player, EventConsent.player_id == Player.id
+    ).outerjoin(
+        Score, (Score.player_id == Player.id) & (Score.event_id == event_id)
+    ).filter(
+        EventConsent.event_id == event_id
+    ).group_by(
+        Player.nickname, Player.email, Player.email_type,
+        EventConsent.consented, EventConsent.ip_address, EventConsent.created_at
+    ).order_by(
+        EventConsent.created_at.asc()
+    ).all()
+
+    players = [{
+        'nickname': r.nickname,
+        'email': r.email,
+        'email_type': r.email_type,
+        'consented': r.consented,
+        'ip_address': r.ip_address,
+        'joined_event_at': r.joined_event_at.isoformat() if r.joined_event_at else None,
+        'games_played': r.games_played or 0
+    } for r in results]
+
+    total_games = sum(p['games_played'] for p in players)
+
+    return jsonify({
+        'event_id': event_id,
+        'event_name': event.name,
+        'total_players': len(players),
+        'total_games': total_games,
+        'players': players
     })
