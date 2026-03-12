@@ -10,9 +10,11 @@ Update the player registration flow to collect first name and last name instead 
 
 - Add `first_name` (String, max 50, nullable in DB, required at API level)
 - Add `last_name` (String, max 50, nullable in DB, required at API level)
-- Keep `nickname` column — no longer collected from users, auto-generated from name
-- Add computed `display_name` property: `"FirstName L."` (first name + last initial + period)
-- Legacy fallback: if `first_name` is null, use `nickname` as display name
+- Keep `nickname` column as `NOT NULL` — no longer collected from users, auto-generated from name (e.g., `"Amit J."`)
+- Nickname uniqueness is not guaranteed (two "Alice J." players can coexist) — acceptable since `display_name` is the public-facing field
+- Add computed `display_name` `@property`: `"FirstName L."` (first name + space + last initial + period)
+- Legacy fallback: if `first_name` is null/empty, `display_name` returns `nickname`
+- Backend validation must reject empty strings (after stripping whitespace), not just null/missing
 
 ### Database Migration (manual SQL)
 
@@ -27,54 +29,63 @@ No migration tool in use — `db.create_all()` handles new tables but not column
 
 ### Player Model (`models.py`)
 
-- Add `first_name` and `last_name` columns
-- Add `display_name` property: returns `"FirstName L."` if first/last name exist, otherwise falls back to `nickname`
+- Add `first_name` and `last_name` columns (nullable at DB level)
+- Add `display_name` `@property`: returns `"FirstName L."` if first/last name are non-empty, otherwise falls back to `nickname`
 - Update `to_dict()` to include `first_name`, `last_name`, and `display_name`
+- `Score.to_dict()` already embeds `player.to_dict()` — new fields propagate automatically
 
 ### Registration Route (`routes/players.py`)
 
 - POST `/api/players` accepts `first_name` and `last_name` instead of `nickname`
-- Validate both fields as required, max 50 chars each
+- Validate both fields: required, non-empty after strip, max 50 chars each
 - Auto-generate `nickname` from name (e.g., `"Amit J."`) for backwards compatibility
-- On re-registration (same email): update `first_name` and `last_name` if changed
+- On re-registration (same email): independently check and update `first_name` and `last_name` (do not infer changes from nickname equality)
 
 ### Leaderboard Routes (`routes/leaderboard.py`)
 
-- Return `display_name` in leaderboard entries (uses first/last name with fallback to nickname)
+- Add `display_name` key to leaderboard response JSON (alongside existing `nickname` key for backwards compatibility)
+- Frontend will read `display_name` instead of `nickname`
 
 ### Admin Routes (`routes/admin.py`)
 
-- Include `first_name`, `last_name` in player data and event player lists
+- `get_stats` query (column-level query): add `Player.first_name`, `Player.last_name` as explicit select columns
+- `get_event_players` query (column-level query): add `Player.first_name`, `Player.last_name` as explicit select columns and include in response dict
+- Both queries must be updated since they bypass `to_dict()`
 
 ## Frontend Changes
 
 ### TypeScript Types (`types.ts`)
 
-- Add `first_name`, `last_name`, `display_name` to Player type
+- Add `first_name`, `last_name`, `display_name` to `Player` type
+- Add `display_name` to `LeaderboardEntry` type (keep `nickname` for backwards compatibility)
 
 ### WelcomeScreen (`components/WelcomeScreen.tsx`)
 
 - Replace "ENTER YOUR HANDLE" nickname input with two fields:
-  - "FIRST NAME" (required, max 50 chars)
+  - "FIRST NAME" (required, max 50 chars, `autoFocus`)
   - "LAST NAME" (required, max 50 chars)
-- Update `onStart` callback signature: `(firstName, lastName, email, consented?)`
+- Update `WelcomeScreenProps.onStart` type: `(firstName: string, lastName: string, email: string, consented?: boolean) => void`
+- Update `errors` state type: replace `nickname` key with `firstName` and `lastName` keys
 
 ### App.tsx
 
-- Update `handleStart` to pass `first_name` and `last_name` to POST `/api/players`
+- Update `handleStart` to accept `firstName, lastName` and pass `first_name`, `last_name` to POST `/api/players`
 - Store updated player object with new fields
+- Pass `player.display_name` (not `player.nickname`) to `ResultsScreen`
 
 ### Leaderboard (`components/Leaderboard.tsx`)
 
-- Display `display_name` instead of `nickname`
+- Display `entry.display_name` instead of `entry.nickname`
 - Fallback handled server-side (legacy players return nickname as display_name)
 
 ### ResultsScreen (`components/ResultsScreen.tsx`)
 
-- Display `display_name` instead of `nickname`
+- Rename `nickname` prop to `displayName`
+- Display `displayName` instead of `nickname`
+- Update AI message API call body to use `displayName` value
 
 ### AdminPage (`pages/AdminPage.tsx`)
 
 - Show first name, last name columns in player tables
 - Show in event player lists
-- Fall back to nickname display for legacy players without names
+- Fall back to display_name for legacy players without name fields
