@@ -101,7 +101,7 @@ function AppContent() {
   }
 
   // Register player and fetch prompt
-  const handleStart = async (nickname: string, email: string, consented?: boolean) => {
+  const handleStart = async (firstName: string, lastName: string, email: string, consented?: boolean) => {
     try {
       setError(null);
 
@@ -109,7 +109,7 @@ function AppContent() {
       const playerRes = await fetch(`${API_BASE}/api/players`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nickname, email }),
+        body: JSON.stringify({ first_name: firstName, last_name: lastName, email }),
       });
 
       if (!playerRes.ok) {
@@ -278,7 +278,7 @@ function AppContent() {
       {gameState === 'results' && finalStats && player && (
         <ResultsScreen
           stats={finalStats}
-          nickname={player.nickname}
+          displayName={player.display_name}
           onPlayAgain={handlePlayAgain}
           onViewLeaderboard={handleViewLeaderboard}
           onNewPlayer={handleBackToWelcome}

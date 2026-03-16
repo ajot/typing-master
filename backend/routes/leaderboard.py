@@ -27,6 +27,7 @@ def get_leaderboard():
         leaderboard.append({
             'rank': rank,
             'nickname': player.nickname,
+            'display_name': player.display_name,
             'wpm': score.wpm,
             'accuracy': round(score.accuracy * 100, 1),
             'score': score.score,
@@ -67,6 +68,7 @@ def get_all_time_leaderboard():
         leaderboard.append({
             'rank': rank,
             'nickname': player.nickname,
+            'display_name': player.display_name,
             'wpm': score.wpm,
             'accuracy': round(score.accuracy * 100, 1),
             'score': score.score,

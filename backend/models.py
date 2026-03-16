@@ -12,6 +12,8 @@ class Player(db.Model):
 
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     nickname = db.Column(db.String(50), nullable=False)
+    first_name = db.Column(db.String(50), nullable=True)
+    last_name = db.Column(db.String(50), nullable=True)
     email = db.Column(db.String(255), nullable=False)
     is_hidden = db.Column(db.Boolean, default=False)  # Hide from leaderboard
     email_type = db.Column(db.String(50), nullable=True)  # Classification: do_employee, company, personal, suspicious, typo
@@ -19,10 +21,19 @@ class Player(db.Model):
 
     scores = db.relationship('Score', backref='player', lazy=True)
 
+    @property
+    def display_name(self):
+        if self.first_name and self.last_name:
+            return f"{self.first_name} {self.last_name[0].upper()}."
+        return self.nickname
+
     def to_dict(self):
         return {
             'id': self.id,
             'nickname': self.nickname,
+            'first_name': self.first_name,
+            'last_name': self.last_name,
+            'display_name': self.display_name,
             'email': self.email,
             'is_hidden': self.is_hidden,
             'email_type': self.email_type,

@@ -5,14 +5,15 @@ import { Footer } from './Footer';
 import { useEvent } from '../contexts/EventContext';
 
 type WelcomeScreenProps = {
-  onStart: (nickname: string, email: string, consented?: boolean) => void;
+  onStart: (firstName: string, lastName: string, email: string, consented?: boolean) => void;
 };
 
 export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
-  const [nickname, setNickname] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [consented, setConsented] = useState(false);
-  const [errors, setErrors] = useState<{ nickname?: string; email?: string; consent?: string }>({});
+  const [errors, setErrors] = useState<{ firstName?: string; lastName?: string; email?: string; consent?: string }>({});
   const [showSettings, setShowSettings] = useState(false);
   const navigate = useNavigate();
   const { event } = useEvent();
@@ -38,12 +39,18 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const newErrors: { nickname?: string; email?: string; consent?: string } = {};
+    const newErrors: { firstName?: string; lastName?: string; email?: string; consent?: string } = {};
 
-    if (!nickname.trim()) {
-      newErrors.nickname = 'Nickname required';
-    } else if (nickname.length > 50) {
-      newErrors.nickname = 'Max 50 characters';
+    if (!firstName.trim()) {
+      newErrors.firstName = 'First name required';
+    } else if (firstName.length > 50) {
+      newErrors.firstName = 'Max 50 characters';
+    }
+
+    if (!lastName.trim()) {
+      newErrors.lastName = 'Last name required';
+    } else if (lastName.length > 50) {
+      newErrors.lastName = 'Max 50 characters';
     }
 
     if (!email.trim()) {
@@ -61,7 +68,7 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
       return;
     }
 
-    onStart(nickname.trim(), email.trim(), consentConfig?.enabled ? consented : undefined);
+    onStart(firstName.trim(), lastName.trim(), email.trim(), consentConfig?.enabled ? consented : undefined);
   };
 
   return (
@@ -118,22 +125,42 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-retro-cyan text-xs mb-2">
-              ENTER YOUR HANDLE
+              FIRST NAME
             </label>
             <input
               type="text"
-              value={nickname}
+              value={firstName}
               onChange={(e) => {
-                setNickname(e.target.value);
-                setErrors((prev) => ({ ...prev, nickname: undefined }));
+                setFirstName(e.target.value);
+                setErrors((prev) => ({ ...prev, firstName: undefined }));
               }}
               className="retro-input w-full"
-              placeholder="PLAYER_ONE"
+              placeholder="SAMMY"
               maxLength={50}
               autoFocus
             />
-            {errors.nickname && (
-              <p className="text-retro-red text-xs mt-1">{errors.nickname}</p>
+            {errors.firstName && (
+              <p className="text-retro-red text-xs mt-1">{errors.firstName}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-retro-cyan text-xs mb-2">
+              LAST NAME
+            </label>
+            <input
+              type="text"
+              value={lastName}
+              onChange={(e) => {
+                setLastName(e.target.value);
+                setErrors((prev) => ({ ...prev, lastName: undefined }));
+              }}
+              className="retro-input w-full"
+              placeholder="SHARK"
+              maxLength={50}
+            />
+            {errors.lastName && (
+              <p className="text-retro-red text-xs mt-1">{errors.lastName}</p>
             )}
           </div>
 

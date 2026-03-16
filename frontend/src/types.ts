@@ -1,6 +1,9 @@
 export type Player = {
   id: string;
   nickname: string;
+  first_name: string;
+  last_name: string;
+  display_name: string;
   email: string;
   created_at: string;
 };
@@ -29,6 +32,7 @@ export type Score = {
 export type LeaderboardEntry = {
   rank: number;
   nickname: string;
+  display_name: string;
   wpm: number;
   accuracy: number;
   score: number;

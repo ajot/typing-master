@@ -152,7 +152,7 @@ export function Leaderboard({
                         {getRankDisplay(entry.rank)}
                       </span>
                       <span className="text-white font-bold truncate max-w-[120px]">
-                        {entry.nickname.toUpperCase()}
+                        {(entry.display_name || entry.nickname).toUpperCase()}
                       </span>
                     </div>
                     <span className={`text-lg font-bold ${getRankColor(entry.rank)}`}>
@@ -184,7 +184,7 @@ export function Leaderboard({
 
                   {/* Player Name */}
                   <div className="col-span-4 text-white truncate">
-                    {entry.nickname.toUpperCase()}
+                    {(entry.display_name || entry.nickname).toUpperCase()}
                   </div>
 
                   {/* WPM */}

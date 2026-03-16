@@ -4,7 +4,7 @@ import type { GameStats } from '../types';
 
 interface ResultsScreenProps {
   stats: GameStats;
-  nickname: string;
+  displayName: string;
   onPlayAgain: () => void;
   onViewLeaderboard: () => void;
   onNewPlayer?: () => void;
@@ -12,7 +12,7 @@ interface ResultsScreenProps {
 
 export function ResultsScreen({
   stats,
-  nickname,
+  displayName,
   onPlayAgain,
   onViewLeaderboard,
   onNewPlayer,
@@ -58,7 +58,7 @@ export function ResultsScreen({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            nickname,
+            nickname: displayName,
             wpm: stats.wpm,
             accuracy: stats.accuracy,
             score: stats.score,
@@ -83,7 +83,7 @@ export function ResultsScreen({
     };
 
     fetchAiMessage();
-  }, [nickname, stats.wpm, stats.accuracy, stats.score, performance.message]);
+  }, [displayName, stats.wpm, stats.accuracy, stats.score, performance.message]);
 
   // Start typewriter when AI message is loaded
   useEffect(() => {
@@ -149,7 +149,7 @@ export function ResultsScreen({
 
         {/* Player Name */}
         <p className="text-retro-gray text-xs mb-8">
-          PLAYER: <span className="text-white">{nickname.toUpperCase()}</span>
+          PLAYER: <span className="text-white">{displayName.toUpperCase()}</span>
         </p>
 
         {/* Stats Grid */}

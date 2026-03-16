@@ -146,6 +146,8 @@ def get_stats():
         Player.id,
         Player.email,
         Player.nickname,
+        Player.first_name,
+        Player.last_name,
         Player.is_hidden,
         Player.email_type,
         Player.created_at,
@@ -185,6 +187,7 @@ def get_stats():
     # Group by player and order by games played
     players = query.group_by(
         Player.id, Player.email, Player.nickname,
+        Player.first_name, Player.last_name,
         Player.is_hidden, Player.email_type, Player.created_at
     ).order_by(func.count(Score.id).desc()).all()
 
@@ -198,6 +201,9 @@ def get_stats():
         'id': str(p.id),
         'email': p.email,
         'nickname': p.nickname,
+        'first_name': p.first_name,
+        'last_name': p.last_name,
+        'display_name': f"{p.first_name} {p.last_name[0].upper()}." if p.first_name and p.last_name else p.nickname,
         'email_type': p.email_type,
         'games_played': p.games_played or 0,
         'best_score': p.best_score or 0,
@@ -261,6 +267,8 @@ def get_event_players(event_id):
     # Query: event_consents joined with players, left join scores for game count
     results = db.session.query(
         Player.nickname,
+        Player.first_name,
+        Player.last_name,
         Player.email,
         Player.email_type,
         EventConsent.consented,
@@ -274,7 +282,8 @@ def get_event_players(event_id):
     ).filter(
         EventConsent.event_id == event_id
     ).group_by(
-        Player.nickname, Player.email, Player.email_type,
+        Player.nickname, Player.first_name, Player.last_name,
+        Player.email, Player.email_type,
         EventConsent.consented, EventConsent.ip_address, EventConsent.created_at
     ).order_by(
         EventConsent.created_at.asc()
@@ -282,6 +291,9 @@ def get_event_players(event_id):
 
     players = [{
         'nickname': r.nickname,
+        'first_name': r.first_name,
+        'last_name': r.last_name,
+        'display_name': f"{r.first_name} {r.last_name[0].upper()}." if r.first_name and r.last_name else r.nickname,
         'email': r.email,
         'email_type': r.email_type,
         'consented': r.consented,

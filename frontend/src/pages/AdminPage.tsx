@@ -7,6 +7,9 @@ type PlayerStats = {
   id: string;
   email: string;
   nickname: string;
+  first_name: string | null;
+  last_name: string | null;
+  display_name: string;
   email_type: string | null;
   games_played: number;
   best_score: number;
@@ -47,6 +50,9 @@ type EventData = {
 
 type EventPlayer = {
   nickname: string;
+  first_name: string | null;
+  last_name: string | null;
+  display_name: string;
   email: string;
   email_type: string | null;
   consented: boolean | null;
@@ -188,9 +194,9 @@ export function AdminPage() {
   const exportCSV = () => {
     if (!stats || stats.players.length === 0) return;
 
-    const headers = ['Nickname', 'Email', 'Type', 'Games Played', 'Best Score', 'Avg WPM', 'Avg Accuracy'];
+    const headers = ['Name', 'Email', 'Type', 'Games Played', 'Best Score', 'Avg WPM', 'Avg Accuracy'];
     const rows = stats.players.map(p => [
-      p.nickname,
+      p.display_name,
       p.email,
       p.email_type === 'do_employee' ? 'Shark' : (p.email_type || ''),
       p.games_played,
@@ -481,9 +487,9 @@ export function AdminPage() {
     const data = eventPlayersCache[eventId];
     if (!data || data.players.length === 0) return;
 
-    const headers = ['Nickname', 'Email', 'Type', 'Consented', 'IP Address', 'Joined At', 'Games Played'];
+    const headers = ['Name', 'Email', 'Type', 'Consented', 'IP Address', 'Joined At', 'Games Played'];
     const rows = data.players.map(p => [
-      p.nickname,
+      p.display_name,
       p.email,
       p.email_type === 'do_employee' ? 'Shark' : (p.email_type || ''),
       p.consented === true ? 'Yes' : p.consented === false ? 'No' : 'N/A',
@@ -701,7 +707,7 @@ export function AdminPage() {
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="text-retro-gray border-b border-retro-gray/30">
-                      <th className="text-left py-2 px-2">NICKNAME</th>
+                      <th className="text-left py-2 px-2">NAME</th>
                       <th className="text-left py-2 px-2">EMAIL</th>
                       <th className="text-center py-2 px-2">TYPE</th>
                       <th className="text-right py-2 px-2">GAMES</th>
@@ -732,7 +738,7 @@ export function AdminPage() {
                         className="border-b border-retro-gray/10 hover:bg-white/5"
                       >
                         <td className="py-2 px-2 text-white">
-                          {player.nickname.toUpperCase()}
+                          {player.display_name.toUpperCase()}
                         </td>
                         <td className="py-2 px-2 text-retro-gray">
                           {player.email}
@@ -1202,7 +1208,7 @@ export function AdminPage() {
                                     <table className="w-full text-xs">
                                       <thead>
                                         <tr className="text-retro-gray border-b border-retro-gray/30">
-                                          <th className="text-left py-2 px-2">NICKNAME</th>
+                                          <th className="text-left py-2 px-2">NAME</th>
                                           <th className="text-left py-2 px-2">EMAIL</th>
                                           <th className="text-center py-2 px-2">TYPE</th>
                                           <th className="text-center py-2 px-2">CONSENTED</th>
@@ -1218,7 +1224,7 @@ export function AdminPage() {
                                             className="border-b border-retro-gray/10 hover:bg-white/5"
                                           >
                                             <td className="py-2 px-2 text-white">
-                                              {player.nickname.toUpperCase()}
+                                              {player.display_name.toUpperCase()}
                                             </td>
                                             <td className="py-2 px-2 text-retro-gray">
                                               {player.email}
