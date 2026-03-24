@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import TopBar from './components/TopBar';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import { TextReveal } from './components/TextReveal';
 import { Countdown } from './components/Countdown';
@@ -234,6 +235,7 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-black">
+      <TopBar />
       {/* Scanline overlay */}
       <div className="scanlines pointer-events-none" />
 

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useTypewriter } from '../hooks/useTypewriter';
 import type { GameStats } from '../types';
 
@@ -222,6 +223,15 @@ export function ResultsScreen({
               NEW PLAYER <span className="text-retro-cyan">[N]</span>
             </button>
           )}
+        </div>
+
+        <div className="mt-4 text-center">
+          <Link
+            to="/pricing"
+            className="text-[10px] text-retro-gray hover:text-white uppercase tracking-wider"
+          >
+            Want this at your event? →
+          </Link>
         </div>
       </div>
     </div>
