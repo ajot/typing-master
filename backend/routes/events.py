@@ -12,6 +12,13 @@ def get_event_by_slug(slug):
     event = Event.query.filter_by(slug=slug, is_active=True).first()
     if not event:
         return jsonify({'error': 'Event not found'}), 404
+
+    now = datetime.utcnow()
+    if event.starts_at and event.starts_at > now:
+        return jsonify({'error': 'Event not found'}), 404
+    if event.ends_at and event.ends_at < now:
+        return jsonify({'error': 'Event not found'}), 404
+
     return jsonify(event.to_dict())
 
 

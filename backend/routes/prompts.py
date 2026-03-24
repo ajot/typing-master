@@ -18,16 +18,29 @@ CATEGORY_DESCRIPTIONS = {
 
 @prompts_bp.route('/prompts/random', methods=['GET'])
 def get_random_prompt():
-    """Get a random active prompt"""
-    prompt = Prompt.query.filter_by(is_active=True).order_by(func.random()).first()
+    """Get a random active prompt, optionally scoped to an event."""
+    event_id = request.args.get('event_id')
+
+    if event_id:
+        # Check for custom prompts for this event
+        event_prompt = Prompt.query.filter_by(
+            event_id=event_id, is_active=True
+        ).order_by(func.random()).first()
+        if event_prompt:
+            event_prompt.times_used += 1
+            db.session.commit()
+            return jsonify(event_prompt.to_dict())
+
+    # Fall back to global prompts (event_id is NULL)
+    prompt = Prompt.query.filter_by(
+        is_active=True, event_id=None
+    ).order_by(func.random()).first()
 
     if not prompt:
         return jsonify({'error': 'No prompts available'}), 404
 
-    # Increment times_used
     prompt.times_used += 1
     db.session.commit()
-
     return jsonify(prompt.to_dict())
 
 
@@ -41,6 +54,9 @@ def list_prompts():
 @prompts_bp.route('/prompts', methods=['POST'])
 def create_prompt():
     """Create a new prompt (admin)"""
+    if os.getenv('FLASK_ENV') != 'development' and os.getenv('ENABLE_ADMIN') != 'true':
+        return jsonify({'error': 'Admin access required'}), 403
+
     data = request.get_json()
 
     if not data:
@@ -65,6 +81,9 @@ def create_prompt():
 @prompts_bp.route('/prompts/<prompt_id>', methods=['PATCH'])
 def update_prompt(prompt_id):
     """Update a prompt (admin)"""
+    if os.getenv('FLASK_ENV') != 'development' and os.getenv('ENABLE_ADMIN') != 'true':
+        return jsonify({'error': 'Admin access required'}), 403
+
     prompt = Prompt.query.get(prompt_id)
     if not prompt:
         return jsonify({'error': 'Prompt not found'}), 404
@@ -89,6 +108,9 @@ def update_prompt(prompt_id):
 @prompts_bp.route('/prompts/<prompt_id>', methods=['DELETE'])
 def delete_prompt(prompt_id):
     """Delete a prompt (admin)"""
+    if os.getenv('FLASK_ENV') != 'development' and os.getenv('ENABLE_ADMIN') != 'true':
+        return jsonify({'error': 'Admin access required'}), 403
+
     prompt = Prompt.query.get(prompt_id)
     if not prompt:
         return jsonify({'error': 'Prompt not found'}), 404
