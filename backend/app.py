@@ -46,6 +46,9 @@ def create_app():
     from routes.auth import auth_bp
     app.register_blueprint(auth_bp)
 
+    from routes.dashboard import dashboard_bp
+    app.register_blueprint(dashboard_bp)
+
     # Only register admin routes in development or when explicitly enabled
     if os.getenv('FLASK_ENV') == 'development' or os.getenv('ENABLE_ADMIN') == 'true':
         from routes.admin import admin_bp
