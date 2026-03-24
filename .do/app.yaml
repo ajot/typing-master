@@ -16,3 +16,5 @@ services:
       - key: DATABASE_URL
         scope: RUN_TIME
         type: SECRET
+      - key: CORS_ORIGIN
+        value: "${APP_URL}"

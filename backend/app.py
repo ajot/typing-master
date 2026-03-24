@@ -22,10 +22,14 @@ def create_app():
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
 
     # Initialize extensions
-    CORS(app, supports_credentials=True, origins=[
+    allowed_origins = [
         'http://localhost:5173',
         'http://localhost:8080',
-    ])
+    ]
+    prod_origin = os.getenv('CORS_ORIGIN')
+    if prod_origin:
+        allowed_origins.append(prod_origin)
+    CORS(app, supports_credentials=True, origins=allowed_origins)
     db.init_app(app)
 
     # Register blueprints
