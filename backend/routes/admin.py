@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from sqlalchemy import func, or_, cast, Numeric
-from models import db, Player, Score, Event, EventConsent
+from models import db, Player, Score, Event, EventConsent, Organizer, Prompt
 import re
 
 admin_bp = Blueprint('admin', __name__)
@@ -311,3 +311,60 @@ def get_event_players(event_id):
         'total_games': total_games,
         'players': players
     })
+
+
+# --- Organizer Management (Super Admin) ---
+
+@admin_bp.route('/api/admin/organizers', methods=['GET'])
+def list_organizers():
+    organizers = Organizer.query.order_by(Organizer.created_at.desc()).all()
+    return jsonify([o.to_dict() for o in organizers])
+
+
+@admin_bp.route('/api/admin/organizers', methods=['POST'])
+def create_organizer():
+    data = request.get_json()
+    if not data or not data.get('email') or not data.get('name'):
+        return jsonify({'error': 'email and name are required'}), 400
+
+    email = data['email'].lower().strip()
+    if Organizer.query.filter_by(email=email).first():
+        return jsonify({'error': 'Organizer with this email already exists'}), 409
+
+    organizer = Organizer(
+        email=email,
+        name=data['name'],
+        is_active=data.get('is_active', False),
+    )
+    db.session.add(organizer)
+    db.session.commit()
+    return jsonify(organizer.to_dict()), 201
+
+
+@admin_bp.route('/api/admin/organizers/<organizer_id>', methods=['PATCH'])
+def update_organizer(organizer_id):
+    organizer = Organizer.query.get(organizer_id)
+    if not organizer:
+        return jsonify({'error': 'Organizer not found'}), 404
+
+    data = request.get_json()
+    if 'is_active' in data:
+        organizer.is_active = data['is_active']
+    if 'name' in data:
+        organizer.name = data['name']
+
+    db.session.commit()
+    return jsonify(organizer.to_dict())
+
+
+@admin_bp.route('/api/admin/organizers/<organizer_id>', methods=['DELETE'])
+def delete_organizer(organizer_id):
+    organizer = Organizer.query.get(organizer_id)
+    if not organizer:
+        return jsonify({'error': 'Organizer not found'}), 404
+
+    # Null out organizer_id on owned events (preserve events, remove ownership)
+    Event.query.filter_by(organizer_id=organizer_id).update({'organizer_id': None})
+    db.session.delete(organizer)
+    db.session.commit()
+    return jsonify({'status': 'ok'}), 200
