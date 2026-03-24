@@ -140,7 +140,10 @@ function AppContent() {
       setStartedAt(new Date().toISOString());
 
       // Fetch random prompt
-      const promptRes = await fetch(`${API_BASE}/api/prompts/random`);
+      const promptUrl = event
+        ? `${API_BASE}/api/prompts/random?event_id=${event.id}`
+        : `${API_BASE}/api/prompts/random`;
+      const promptRes = await fetch(promptUrl);
       if (!promptRes.ok) {
         throw new Error('Failed to fetch prompt');
       }
@@ -211,7 +214,10 @@ function AppContent() {
   const handlePlayAgain = async () => {
     // Fetch new prompt
     try {
-      const promptRes = await fetch(`${API_BASE}/api/prompts/random`);
+      const promptUrl = event
+        ? `${API_BASE}/api/prompts/random?event_id=${event.id}`
+        : `${API_BASE}/api/prompts/random`;
+      const promptRes = await fetch(promptUrl);
       if (promptRes.ok) {
         const promptData = await promptRes.json();
         setPrompt(promptData);
