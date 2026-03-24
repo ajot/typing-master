@@ -51,6 +51,7 @@ class Prompt(db.Model):
     is_active = db.Column(db.Boolean, default=True)
     times_used = db.Column(db.Integer, default=0)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    event_id = db.Column(db.String(36), db.ForeignKey('events.id'), nullable=True)
 
     scores = db.relationship('Score', backref='prompt', lazy=True)
 
@@ -62,6 +63,7 @@ class Prompt(db.Model):
             'difficulty': self.difficulty,
             'is_active': self.is_active,
             'times_used': self.times_used,
+            'event_id': self.event_id,
             'created_at': self.created_at.isoformat()
         }
 
@@ -74,6 +76,9 @@ class Event(db.Model):
     name = db.Column(db.String(200), nullable=False)
     is_active = db.Column(db.Boolean, default=True)
     config = db.Column(db.JSON, default=dict)
+    organizer_id = db.Column(db.String(36), db.ForeignKey('organizers.id'), nullable=True)
+    starts_at = db.Column(db.DateTime, nullable=True)
+    ends_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     scores = db.relationship('Score', backref='event', lazy=True)
@@ -86,6 +91,9 @@ class Event(db.Model):
             'name': self.name,
             'is_active': self.is_active,
             'config': self.config or {},
+            'organizer_id': self.organizer_id,
+            'starts_at': self.starts_at.isoformat() if self.starts_at else None,
+            'ends_at': self.ends_at.isoformat() if self.ends_at else None,
             'created_at': self.created_at.isoformat()
         }
 
@@ -113,6 +121,31 @@ class EventConsent(db.Model):
             'player_id': self.player_id,
             'consented': self.consented,
             'consent_text': self.consent_text,
+            'created_at': self.created_at.isoformat()
+        }
+
+
+class Organizer(db.Model):
+    __tablename__ = 'organizers'
+
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
+    email = db.Column(db.String(255), unique=True, nullable=False, index=True)
+    name = db.Column(db.String(100), nullable=False)
+    is_active = db.Column(db.Boolean, default=False)
+    auth_token_hash = db.Column(db.String(255), nullable=True)
+    auth_token_expires_at = db.Column(db.DateTime, nullable=True)
+    session_token_hash = db.Column(db.String(255), nullable=True)
+    session_expires_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    events = db.relationship('Event', backref='organizer', lazy=True)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'email': self.email,
+            'name': self.name,
+            'is_active': self.is_active,
             'created_at': self.created_at.isoformat()
         }
 
