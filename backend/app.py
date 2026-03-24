@@ -22,7 +22,10 @@ def create_app():
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
 
     # Initialize extensions
-    CORS(app)
+    CORS(app, supports_credentials=True, origins=[
+        'http://localhost:5173',
+        'http://localhost:8080',
+    ])
     db.init_app(app)
 
     # Register blueprints
@@ -39,6 +42,9 @@ def create_app():
     app.register_blueprint(leaderboard_bp, url_prefix='/api')
     app.register_blueprint(ai_bp, url_prefix='/api')
     app.register_blueprint(events_bp, url_prefix='/api')
+
+    from routes.auth import auth_bp
+    app.register_blueprint(auth_bp)
 
     # Only register admin routes in development or when explicitly enabled
     if os.getenv('FLASK_ENV') == 'development' or os.getenv('ENABLE_ADMIN') == 'true':
