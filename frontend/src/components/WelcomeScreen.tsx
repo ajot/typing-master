@@ -226,12 +226,25 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
         {/* Footer */}
         <Footer />
 
-        {/* Organizer link — comic speech bubble */}
-        <div className="text-center mt-4">
-          <Link to="/pricing" className="group inline-block relative bg-white text-black text-[9px] font-bold px-4 py-2 rounded-lg uppercase tracking-wider hover:bg-do-orange transition-colors">
-            Host this game at your event →
-            <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white group-hover:bg-do-orange rotate-45 transition-colors"></span>
-          </Link>
+        {/* Organizer link — booth person with speech bubble */}
+        <div className="flex items-end justify-center mt-6 gap-2">
+          {/* Pixel booth person */}
+          <div className="flex flex-col items-center mb-1">
+            {/* Head */}
+            <div className="w-3 h-3 bg-yellow-300 rounded-sm"></div>
+            {/* Body */}
+            <div className="w-4 h-3 bg-retro-cyan rounded-sm mt-px"></div>
+            {/* Booth table */}
+            <div className="w-8 h-2 bg-do-orange rounded-sm mt-px"></div>
+          </div>
+          {/* Speech bubble */}
+          <div className="relative mb-3">
+            <Link to="/pricing" className="group inline-block relative bg-white text-black text-[9px] font-bold px-3 py-1.5 rounded-lg uppercase tracking-wider hover:bg-do-orange transition-colors">
+              Host this game at your event →
+            </Link>
+            {/* Bubble tail pointing left toward person */}
+            <span className="absolute bottom-1 -left-1.5 w-0 h-0 border-t-[6px] border-t-transparent border-r-[8px] border-r-white border-b-[6px] border-b-transparent"></span>
+          </div>
         </div>
       </div>
 
