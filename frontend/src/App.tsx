@@ -240,7 +240,7 @@ function AppContent() {
   };
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="relative min-h-screen bg-black">
       <TopBar />
       {/* Scanline overlay */}
       <div className="scanlines pointer-events-none" />

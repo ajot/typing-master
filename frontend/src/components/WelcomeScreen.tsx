@@ -107,9 +107,11 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
         <h1 className="text-2xl md:text-3xl text-accent text-center mb-2 text-glow-accent">
           TYPE THE CLOUD
         </h1>
-        <p className="text-retro-cyan text-center text-xs mb-8">
-          {event?.config?.subtitle || 'DIGITALOCEAN EDITION'}
-        </p>
+        {event?.config?.subtitle && (
+          <p className="text-retro-cyan text-center text-xs mb-8">
+            {event.config.subtitle}
+          </p>
+        )}
 
         {/* Instructions */}
         <div className="mb-8 text-center">
