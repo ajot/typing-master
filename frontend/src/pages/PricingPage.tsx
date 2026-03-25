@@ -72,6 +72,13 @@ export default function PricingPage() {
             </a>
           </div>
         </div>
+
+        <p className="text-sm text-gray-500">
+          Already an organizer?{' '}
+          <Link to="/login" className="text-blue-600 hover:text-blue-800">
+            Log in
+          </Link>
+        </p>
       </div>
     </div>
   );
