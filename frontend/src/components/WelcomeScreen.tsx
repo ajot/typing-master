@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { SettingsModal } from './SettingsModal';
+import PixelKeyboard from './PixelKeyboard';
 import { useEvent } from '../contexts/EventContext';
 
 type WelcomeScreenProps = {
@@ -93,13 +94,9 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
           </svg>
         </button>
 
-        {/* 8-bit Sammy Logo */}
+        {/* Pixel Keyboard Logo */}
         <div className="flex justify-center mb-4">
-          <img
-            src="/sammy-8bit.png"
-            alt="Sammy the Shark"
-            className="w-32 h-32 object-contain"
-          />
+          <PixelKeyboard />
         </div>
 
         {/* Title */}
