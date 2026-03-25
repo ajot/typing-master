@@ -24,16 +24,16 @@ export default function LoginPage() {
 
   if (sent) {
     return (
-      <div className="dashboard-theme min-h-screen bg-gray-50 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
         <div className="max-w-sm w-full text-center">
-          <h1 className="text-2xl font-semibold text-gray-900 mb-2">Check your email</h1>
-          <p className="text-gray-600 mb-6">
-            If an account exists for <strong>{email}</strong>, we've sent a login link.
+          <h1 className="text-xl font-semibold text-white mb-2">Check your email</h1>
+          <p className="text-gray-400 text-sm mb-6">
+            If an account exists for <strong className="text-white">{email}</strong>, we've sent a login link.
             It expires in 15 minutes.
           </p>
           <button
             onClick={() => { setSent(false); setEmail(''); }}
-            className="text-sm text-blue-600 hover:text-blue-800"
+            className="text-sm text-do-orange hover:text-white"
           >
             Try a different email
           </button>
@@ -43,14 +43,14 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="dashboard-theme min-h-screen bg-gray-50 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
       <div className="max-w-sm w-full">
         <div className="text-center mb-8">
-          <Link to="/" className="text-2xl font-semibold text-gray-900">Type the Cloud</Link>
-          <p className="text-gray-600 mt-2">Organizer login</p>
+          <Link to="/" className="text-2xl font-bold text-white">Type the Cloud</Link>
+          <p className="text-gray-500 mt-2 text-sm">Organizer login</p>
         </div>
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+        <form onSubmit={handleSubmit} className="bg-gray-900 border border-gray-800 rounded-lg p-6">
+          <label htmlFor="email" className="block text-sm font-medium text-gray-400 mb-1">
             Email address
           </label>
           <input
@@ -60,21 +60,21 @@ export default function LoginPage() {
             onChange={e => setEmail(e.target.value)}
             placeholder="you@company.com"
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 bg-gray-950 border border-gray-700 rounded-md text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-do-orange focus:border-transparent"
           />
-          {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
+          {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
           <button
             type="submit"
             disabled={submitting || !email.trim()}
-            className="w-full mt-4 px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-md hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full mt-4 px-4 py-2 bg-do-orange text-black text-sm font-bold rounded-md hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {submitting ? 'Sending...' : 'Send login link'}
           </button>
         </form>
         <div className="mt-6 text-center">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-600">
             Want to host your own typing competition?{' '}
-            <a href="mailto:amit@ajot.me" className="text-blue-600 hover:text-blue-800">
+            <a href="mailto:amit@ajot.me" className="text-do-orange hover:text-white">
               Contact us to get started
             </a>
           </p>
@@ -110,21 +110,21 @@ export function VerifyPage() {
   }, [token, verify, navigate]);
 
   return (
-    <div className="dashboard-theme min-h-screen bg-gray-50 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
       <div className="text-center">
         {!hasToken ? (
           <div>
-            <p className="text-red-600 mb-4">No token provided</p>
-            <Link to="/login" className="text-blue-600 hover:text-blue-800 text-sm">
+            <p className="text-red-400 mb-4">No token provided</p>
+            <Link to="/login" className="text-do-orange hover:text-white text-sm">
               Back to login
             </Link>
           </div>
         ) : verifying ? (
-          <p className="text-gray-600">Verifying your login link...</p>
+          <p className="text-gray-400">Verifying your login link...</p>
         ) : (
           <div>
-            <p className="text-red-600 mb-4">{error}</p>
-            <Link to="/login" className="text-blue-600 hover:text-blue-800 text-sm">
+            <p className="text-red-400 mb-4">{error}</p>
+            <Link to="/login" className="text-do-orange hover:text-white text-sm">
               Back to login
             </Link>
           </div>
