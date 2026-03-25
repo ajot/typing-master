@@ -31,9 +31,6 @@ export default function DashboardLayout() {
               <Link to="/dashboard" className="text-do-orange text-sm" style={{ fontFamily: "'Press Start 2P', cursive", fontSize: '12px' }}>
                 Type the Cloud
               </Link>
-              <Link to="/dashboard" className="text-sm text-gray-400 hover:text-white">
-                Events
-              </Link>
             </div>
             <div className="flex items-center gap-4">
               <span className="text-sm text-gray-500">{organizer.email}</span>
