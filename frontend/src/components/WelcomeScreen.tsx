@@ -230,7 +230,7 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
         <div className="text-center mt-4">
           <Link to="/pricing" className="group inline-block relative bg-white text-black text-[9px] font-bold px-4 py-2 rounded-lg uppercase tracking-wider hover:bg-do-orange transition-colors">
             Host this game at your event →
-            <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white group-hover:bg-do-orange rotate-45 transition-colors"></span>
+            <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white group-hover:bg-do-orange rotate-45 transition-colors"></span>
           </Link>
         </div>
       </div>
