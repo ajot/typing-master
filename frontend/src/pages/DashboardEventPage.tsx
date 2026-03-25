@@ -94,20 +94,22 @@ export default function DashboardEventPage() {
       .finally(() => setLoading(false));
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { fetchEvent(); }, [eventId]);
 
   useEffect(() => {
     if (!eventId) return;
+    const opts = { credentials: 'include' as const };
     if (tab === 'leaderboard') {
-      fetch(`${API_BASE}/api/dashboard/events/${eventId}/leaderboard`, fetchOpts)
+      fetch(`${API_BASE}/api/dashboard/events/${eventId}/leaderboard`, opts)
         .then(res => res.json())
         .then(data => setLeaderboard(data.leaderboard || []));
     } else if (tab === 'players') {
-      fetch(`${API_BASE}/api/dashboard/events/${eventId}/players`, fetchOpts)
+      fetch(`${API_BASE}/api/dashboard/events/${eventId}/players`, opts)
         .then(res => res.json())
         .then(data => setPlayers(data.players || []));
     } else if (tab === 'prompts') {
-      fetch(`${API_BASE}/api/dashboard/events/${eventId}/prompts`, fetchOpts)
+      fetch(`${API_BASE}/api/dashboard/events/${eventId}/prompts`, opts)
         .then(res => res.json())
         .then(data => setPrompts(data));
     }

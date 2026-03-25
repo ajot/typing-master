@@ -92,14 +92,14 @@ export function VerifyPage() {
   const [error, setError] = useState('');
   const [verifying, setVerifying] = useState(true);
 
+  const token = searchParams.get('token');
+  const hasToken = !!token;
+
   useEffect(() => {
-    const token = searchParams.get('token');
-    if (!token) {
-      setError('No token provided');
-      setVerifying(false);
-      return;
-    }
+    if (!token) return;
+    let cancelled = false;
     verify(token).then(result => {
+      if (cancelled) return;
       if (result.success) {
         navigate(result.redirect || '/dashboard');
       } else {
@@ -107,12 +107,20 @@ export function VerifyPage() {
         setVerifying(false);
       }
     });
-  }, []);
+    return () => { cancelled = true; };
+  }, [token, verify, navigate]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="text-center">
-        {verifying ? (
+        {!hasToken ? (
+          <div>
+            <p className="text-red-600 mb-4">No token provided</p>
+            <Link to="/login" className="text-blue-600 hover:text-blue-800 text-sm">
+              Back to login
+            </Link>
+          </div>
+        ) : verifying ? (
           <p className="text-gray-600">Verifying your login link...</p>
         ) : (
           <div>
