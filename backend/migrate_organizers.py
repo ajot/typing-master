@@ -43,7 +43,9 @@ if __name__ == '__main__':
             if statement and not statement.startswith('--'):
                 try:
                     db.session.execute(db.text(statement))
+                    db.session.commit()
                 except Exception as e:
+                    db.session.rollback()
                     print(f"  Warning: {e}")
         db.session.commit()
         print("Migration complete.")
