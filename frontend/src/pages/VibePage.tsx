@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom';
-import { Footer } from '../components/Footer';
 
 type Milestone = {
   time: string;
@@ -196,8 +195,6 @@ export function VibePage() {
           </Link>
         </div>
 
-        {/* Footer */}
-        <Footer />
       </div>
 
     </div>

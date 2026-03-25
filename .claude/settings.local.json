@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl:*)",
+      "mcp__ide__getDiagnostics",
+      "WebFetch(domain:soloterm.com)",
+      "Bash(npm run lint:*)",
+      "Bash(python:*)",
+      "Bash(npx tsc:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(npm run:*)",
+      "Bash(source venv/bin/activate)"
+    ]
+  }
+}

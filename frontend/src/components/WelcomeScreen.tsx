@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { SettingsModal } from './SettingsModal';
-import { Footer } from './Footer';
 import { useEvent } from '../contexts/EventContext';
 
 type WelcomeScreenProps = {
@@ -222,9 +221,6 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
             VIEW LEADERBOARD <span className="text-retro-cyan">[L]</span>
           </Link>
         </div>
-
-        {/* Footer */}
-        <Footer />
 
         {/* Organizer link — booth person with speech bubble */}
         <div className="flex items-end justify-center mt-6 gap-2">

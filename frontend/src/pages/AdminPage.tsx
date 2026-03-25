@@ -487,9 +487,10 @@ export function AdminPage() {
     const data = eventPlayersCache[eventId];
     if (!data || data.players.length === 0) return;
 
-    const headers = ['Name', 'Email', 'Type', 'Consented', 'IP Address', 'Joined At', 'Games Played'];
+    const headers = ['First Name', 'Last Name', 'Email', 'Type', 'Consented', 'IP Address', 'Joined At', 'Games Played'];
     const rows = data.players.map(p => [
-      p.display_name,
+      p.first_name || '',
+      p.last_name || '',
       p.email,
       p.email_type === 'do_employee' ? 'Shark' : (p.email_type || ''),
       p.consented === true ? 'Yes' : p.consented === false ? 'No' : 'N/A',
@@ -1208,7 +1209,8 @@ export function AdminPage() {
                                     <table className="w-full text-xs">
                                       <thead>
                                         <tr className="text-retro-gray border-b border-retro-gray/30">
-                                          <th className="text-left py-2 px-2">NAME</th>
+                                          <th className="text-left py-2 px-2">FIRST NAME</th>
+                                          <th className="text-left py-2 px-2">LAST NAME</th>
                                           <th className="text-left py-2 px-2">EMAIL</th>
                                           <th className="text-center py-2 px-2">TYPE</th>
                                           <th className="text-center py-2 px-2">CONSENTED</th>
@@ -1224,7 +1226,10 @@ export function AdminPage() {
                                             className="border-b border-retro-gray/10 hover:bg-white/5"
                                           >
                                             <td className="py-2 px-2 text-white">
-                                              {player.display_name.toUpperCase()}
+                                              {(player.first_name || '-').toUpperCase()}
+                                            </td>
+                                            <td className="py-2 px-2 text-white">
+                                              {(player.last_name || '-').toUpperCase()}
                                             </td>
                                             <td className="py-2 px-2 text-retro-gray">
                                               {player.email}

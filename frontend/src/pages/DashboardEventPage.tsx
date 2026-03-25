@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
+const FETCH_OPTS = { credentials: 'include' as const };
 
 type EventDetail = {
   id: string;
@@ -74,10 +75,8 @@ export default function DashboardEventPage() {
   const [newPromptText, setNewPromptText] = useState('');
   const [creatingPrompt, setCreatingPrompt] = useState(false);
 
-  const fetchOpts = { credentials: 'include' as const };
-
   const fetchEvent = () => {
-    fetch(`${API_BASE}/api/dashboard/events/${eventId}`, fetchOpts)
+    fetch(`${API_BASE}/api/dashboard/events/${eventId}`, FETCH_OPTS)
       .then(res => { if (!res.ok) throw new Error(); return res.json(); })
       .then(data => {
         setEvent(data);
@@ -99,17 +98,16 @@ export default function DashboardEventPage() {
 
   useEffect(() => {
     if (!eventId) return;
-    const opts = { credentials: 'include' as const };
     if (tab === 'leaderboard') {
-      fetch(`${API_BASE}/api/dashboard/events/${eventId}/leaderboard`, opts)
+      fetch(`${API_BASE}/api/dashboard/events/${eventId}/leaderboard`, FETCH_OPTS)
         .then(res => res.json())
         .then(data => setLeaderboard(data.leaderboard || []));
     } else if (tab === 'players') {
-      fetch(`${API_BASE}/api/dashboard/events/${eventId}/players`, opts)
+      fetch(`${API_BASE}/api/dashboard/events/${eventId}/players`, FETCH_OPTS)
         .then(res => res.json())
         .then(data => setPlayers(data.players || []));
     } else if (tab === 'prompts') {
-      fetch(`${API_BASE}/api/dashboard/events/${eventId}/prompts`, opts)
+      fetch(`${API_BASE}/api/dashboard/events/${eventId}/prompts`, FETCH_OPTS)
         .then(res => res.json())
         .then(data => setPrompts(data));
     }
@@ -166,7 +164,7 @@ export default function DashboardEventPage() {
     setNewPromptText('');
     setCreatingPrompt(false);
     // Refresh prompts
-    fetch(`${API_BASE}/api/dashboard/events/${eventId}/prompts`, fetchOpts)
+    fetch(`${API_BASE}/api/dashboard/events/${eventId}/prompts`, FETCH_OPTS)
       .then(res => res.json())
       .then(data => setPrompts(data));
   };

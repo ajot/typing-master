@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import type { LeaderboardEntry } from '../types';
-import { Footer } from './Footer';
 
 interface LeaderboardProps {
   entries: LeaderboardEntry[];
@@ -270,8 +269,6 @@ export function Leaderboard({
           )}
         </div>
 
-        {/* Footer */}
-        <Footer />
       </div>
 
     </div>
