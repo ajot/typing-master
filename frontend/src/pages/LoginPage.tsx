@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -94,12 +94,12 @@ export function VerifyPage() {
 
   const token = searchParams.get('token');
   const hasToken = !!token;
+  const verifyAttempted = useRef(false);
 
   useEffect(() => {
-    if (!token) return;
-    let cancelled = false;
+    if (!token || verifyAttempted.current) return;
+    verifyAttempted.current = true;
     verify(token).then(result => {
-      if (cancelled) return;
       if (result.success) {
         navigate(result.redirect || '/dashboard');
       } else {
@@ -107,7 +107,6 @@ export function VerifyPage() {
         setVerifying(false);
       }
     });
-    return () => { cancelled = true; };
   }, [token, verify, navigate]);
 
   return (

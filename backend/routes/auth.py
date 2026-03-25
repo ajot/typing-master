@@ -65,7 +65,7 @@ def verify():
     if not data or not data.get('token'):
         return jsonify({'error': 'Token is required'}), 400
 
-    token = data['token']
+    token = data['token'].strip().replace(' ', '')
     token_hash = hash_token(token)
 
     organizer = Organizer.query.filter_by(auth_token_hash=token_hash).first()
@@ -87,11 +87,12 @@ def verify():
         'organizer': organizer.to_dict(),
         'redirect': '/dashboard'
     }))
+    is_secure = 'localhost' not in request.host and '127.0.0.1' not in request.host
     response.set_cookie(
         'session_token',
         session_token,
         httponly=True,
-        secure=True,
+        secure=is_secure,
         samesite='Lax',
         max_age=30 * 24 * 60 * 60
     )

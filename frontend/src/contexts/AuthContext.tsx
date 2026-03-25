@@ -49,7 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const res = await fetch(`${API_BASE}/api/auth/verify`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token }),
+      body: JSON.stringify({ token: token.trim().replace(/\s+/g, '') }),
       credentials: 'include',
     });
     const data = await res.json();
