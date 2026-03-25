@@ -25,7 +25,7 @@ createRoot(document.getElementById('root')!).render(
           {import.meta.env.DEV && <Route path="/admin" element={<AdminPage />} />}
           <Route path="/login" element={<AuthProvider><LoginPage /></AuthProvider>} />
           <Route path="/login/verify" element={<AuthProvider><VerifyPage /></AuthProvider>} />
-          <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/host" element={<PricingPage />} />
           <Route path="/dashboard" element={<AuthProvider><DashboardLayout /></AuthProvider>}>
             <Route index element={<DashboardPage />} />
             <Route path="events/:eventId" element={<DashboardEventPage />} />

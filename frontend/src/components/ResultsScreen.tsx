@@ -227,7 +227,7 @@ export function ResultsScreen({
 
         <div className="mt-4 text-center">
           <Link
-            to="/pricing"
+            to="/host"
             className="text-[10px] text-retro-gray hover:text-white uppercase tracking-wider"
           >
             Want this at your event? →

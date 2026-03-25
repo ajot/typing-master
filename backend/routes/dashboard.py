@@ -11,7 +11,7 @@ dashboard_bp = Blueprint('dashboard', __name__)
 
 # Reserved slugs — must match frontend reserved list
 RESERVED_SLUGS = {
-    'admin', 'dashboard', 'login', 'signup', 'pricing', 'leaderboard',
+    'admin', 'dashboard', 'login', 'signup', 'host', 'leaderboard',
     'api', 'static', 'health', 'about', 'terms', 'privacy', 'vibe', 'play'
 }
 

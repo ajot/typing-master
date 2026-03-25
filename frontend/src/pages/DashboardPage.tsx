@@ -16,7 +16,7 @@ type EventSummary = {
 };
 
 const RESERVED_SLUGS = new Set([
-  'admin', 'dashboard', 'login', 'signup', 'pricing', 'leaderboard',
+  'admin', 'dashboard', 'login', 'signup', 'host', 'leaderboard',
   'api', 'static', 'health', 'about', 'terms', 'privacy', 'vibe', 'play'
 ]);
 
