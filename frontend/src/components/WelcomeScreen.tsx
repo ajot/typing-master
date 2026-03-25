@@ -225,6 +225,17 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
 
         {/* Footer */}
         <Footer />
+
+        {/* Organizer links */}
+        <div className="flex justify-center gap-3 mt-2">
+          <Link to="/pricing" className="text-[9px] text-retro-gray/50 hover:text-retro-gray uppercase tracking-wider">
+            Pricing
+          </Link>
+          <span className="text-[9px] text-retro-gray/20">|</span>
+          <Link to="/login" className="text-[9px] text-retro-gray/50 hover:text-retro-gray uppercase tracking-wider">
+            Host an Event
+          </Link>
+        </div>
       </div>
 
       {/* Settings Modal */}
