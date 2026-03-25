@@ -31,6 +31,14 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Dashboard/login theme override — clean professional look */
+.dashboard-theme {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  color: #111827;
+  background-color: #f9fafb;
+  color-scheme: light;
+}
+
 /* Theme variants */
 :root.theme-orange {
   --accent-color: #FF6B00;

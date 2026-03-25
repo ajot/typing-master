@@ -24,7 +24,7 @@ export default function LoginPage() {
 
   if (sent) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+      <div className="dashboard-theme min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="max-w-sm w-full text-center">
           <h1 className="text-2xl font-semibold text-gray-900 mb-2">Check your email</h1>
           <p className="text-gray-600 mb-6">
@@ -43,7 +43,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+    <div className="dashboard-theme min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="max-w-sm w-full">
         <div className="text-center mb-8">
           <Link to="/" className="text-2xl font-semibold text-gray-900">Type the Cloud</Link>
@@ -111,7 +111,7 @@ export function VerifyPage() {
   }, [token, verify, navigate]);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+    <div className="dashboard-theme min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="text-center">
         {!hasToken ? (
           <div>

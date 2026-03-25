@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 
 export default function PricingPage() {
   return (
-    <div className="min-h-screen bg-gray-50 py-16 px-4">
+    <div className="dashboard-theme min-h-screen bg-gray-50 py-16 px-4">
       <div className="max-w-3xl mx-auto text-center">
         <h1 className="text-3xl font-semibold text-gray-900 mb-2">Host Your Own Typing Competition</h1>
         <p className="text-gray-600 mb-12">Run "Type the Cloud" at your conference, meetup, or team event.</p>
