@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { SettingsModal } from './SettingsModal';
-import PixelKeyboard from './PixelKeyboard';
 import { useEvent } from '../contexts/EventContext';
 
 type WelcomeScreenProps = {
@@ -96,7 +95,11 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
 
         {/* Pixel Keyboard Logo */}
         <div className="flex justify-center mb-4">
-          <PixelKeyboard />
+          <img
+            src="/keyboard-8bit.png"
+            alt="Type the Cloud"
+            className="w-40 h-auto object-contain"
+          />
         </div>
 
         {/* Title */}
