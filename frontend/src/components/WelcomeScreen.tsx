@@ -239,10 +239,10 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
           </div>
           {/* Speech bubble */}
           <div className="relative mb-3">
-            <Link to="/pricing" className="group inline-block relative bg-white text-black text-[9px] font-bold px-3 py-1.5 rounded-lg uppercase tracking-wider hover:bg-do-orange transition-colors">
+            <Link to="/pricing" className="group inline-block relative bg-yellow-300 text-black text-[9px] font-bold px-3 py-1.5 rounded-lg uppercase tracking-wider hover:bg-do-orange transition-colors">
               Host this game at your event →
               {/* Bubble tail pointing left toward person */}
-              <span className="absolute bottom-1 -left-1.5 w-0 h-0 border-t-[6px] border-t-transparent border-r-[8px] border-r-white group-hover:border-r-do-orange border-b-[6px] border-b-transparent transition-colors"></span>
+              <span className="absolute bottom-1 -left-1.5 w-0 h-0 border-t-[6px] border-t-transparent border-r-[8px] border-r-yellow-300 group-hover:border-r-do-orange border-b-[6px] border-b-transparent transition-colors"></span>
             </Link>
           </div>
         </div>
