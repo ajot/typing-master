@@ -340,8 +340,12 @@ def create_event_prompt(event_id):
     if not data or not data.get('text'):
         return jsonify({'error': 'text is required'}), 400
 
+    text = data['text'].strip()
+    if len(text) > 300:
+        return jsonify({'error': 'Prompt must be 300 characters or less'}), 400
+
     prompt = Prompt(
-        text=data['text'],
+        text=text,
         category=data.get('category', 'custom'),
         difficulty=data.get('difficulty', 'medium'),
         is_active=data.get('is_active', True),
