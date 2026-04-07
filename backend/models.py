@@ -132,6 +132,7 @@ class Organizer(db.Model):
     email = db.Column(db.String(255), unique=True, nullable=False, index=True)
     name = db.Column(db.String(100), nullable=False)
     is_active = db.Column(db.Boolean, default=False)
+    is_admin = db.Column(db.Boolean, default=False)
     auth_token_hash = db.Column(db.String(255), nullable=True)
     auth_token_expires_at = db.Column(db.DateTime, nullable=True)
     session_token_hash = db.Column(db.String(255), nullable=True)
@@ -146,6 +147,7 @@ class Organizer(db.Model):
             'email': self.email,
             'name': self.name,
             'is_active': self.is_active,
+            'is_admin': self.is_admin,
             'created_at': self.created_at.isoformat()
         }
 

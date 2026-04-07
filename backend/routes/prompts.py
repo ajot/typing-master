@@ -1,6 +1,7 @@
 import os
 from flask import Blueprint, request, jsonify
 from models import db, Prompt
+from middleware import require_admin
 from sqlalchemy.sql.expression import func
 
 prompts_bp = Blueprint('prompts', __name__)
@@ -52,11 +53,9 @@ def list_prompts():
 
 
 @prompts_bp.route('/prompts', methods=['POST'])
+@require_admin
 def create_prompt():
     """Create a new prompt (admin)"""
-    if os.getenv('FLASK_ENV') != 'development' and os.getenv('ENABLE_ADMIN') != 'true':
-        return jsonify({'error': 'Admin access required'}), 403
-
     data = request.get_json()
 
     if not data:
@@ -79,11 +78,9 @@ def create_prompt():
 
 
 @prompts_bp.route('/prompts/<prompt_id>', methods=['PATCH'])
+@require_admin
 def update_prompt(prompt_id):
     """Update a prompt (admin)"""
-    if os.getenv('FLASK_ENV') != 'development' and os.getenv('ENABLE_ADMIN') != 'true':
-        return jsonify({'error': 'Admin access required'}), 403
-
     prompt = Prompt.query.get(prompt_id)
     if not prompt:
         return jsonify({'error': 'Prompt not found'}), 404
@@ -106,11 +103,9 @@ def update_prompt(prompt_id):
 
 
 @prompts_bp.route('/prompts/<prompt_id>', methods=['DELETE'])
+@require_admin
 def delete_prompt(prompt_id):
     """Delete a prompt (admin)"""
-    if os.getenv('FLASK_ENV') != 'development' and os.getenv('ENABLE_ADMIN') != 'true':
-        return jsonify({'error': 'Admin access required'}), 403
-
     prompt = Prompt.query.get(prompt_id)
     if not prompt:
         return jsonify({'error': 'Prompt not found'}), 404

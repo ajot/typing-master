@@ -34,3 +34,31 @@ def require_organizer(f):
         request.organizer = organizer
         return f(*args, **kwargs)
     return decorated
+
+
+def require_admin(f):
+    """Decorator that requires an organizer with is_admin=True."""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        session_token = request.cookies.get('session_token')
+        if not session_token:
+            return jsonify({'error': 'Authentication required'}), 401
+
+        token_hash = hash_token(session_token)
+        organizer = Organizer.query.filter_by(session_token_hash=token_hash).first()
+
+        if not organizer:
+            return jsonify({'error': 'Invalid session'}), 401
+
+        if organizer.session_expires_at and organizer.session_expires_at < datetime.utcnow():
+            return jsonify({'error': 'Session expired'}), 401
+
+        if not organizer.is_active:
+            return jsonify({'error': 'Account is not active', 'inactive': True}), 403
+
+        if not organizer.is_admin:
+            return jsonify({'error': 'Admin access required'}), 403
+
+        request.organizer = organizer
+        return f(*args, **kwargs)
+    return decorated

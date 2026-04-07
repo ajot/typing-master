@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
 
@@ -75,6 +74,8 @@ type SortDirection = 'asc' | 'desc';
 
 const CATEGORIES = ['droplets', 'kubernetes', 'app-platform', 'databases', 'spaces', 'gradient-ai', 'general'];
 
+const fetchOpts: RequestInit = { credentials: 'include' };
+
 export function AdminPage() {
   // Tab state
   const [activeTab, setActiveTab] = useState<Tab>('players');
@@ -128,7 +129,7 @@ export function AdminPage() {
       const url = params.toString()
         ? `${API_BASE}/api/admin/stats?${params.toString()}`
         : `${API_BASE}/api/admin/stats`;
-      const res = await fetch(url);
+      const res = await fetch(url, fetchOpts);
       if (!res.ok) throw new Error('Failed to fetch stats');
       const data = await res.json();
       setStats(data);
@@ -143,7 +144,7 @@ export function AdminPage() {
     setPromptsLoading(true);
     setPromptsError(null);
     try {
-      const res = await fetch(`${API_BASE}/api/prompts`);
+      const res = await fetch(`${API_BASE}/api/prompts`, fetchOpts);
       if (!res.ok) throw new Error('Failed to fetch prompts');
       const data = await res.json();
       setPrompts(data);
@@ -162,7 +163,7 @@ export function AdminPage() {
     setEventsLoading(true);
     setEventsError(null);
     try {
-      const res = await fetch(`${API_BASE}/api/events`);
+      const res = await fetch(`${API_BASE}/api/events`, fetchOpts);
       if (!res.ok) throw new Error('Failed to fetch events');
       const data = await res.json();
       setEvents(data);
@@ -221,10 +222,8 @@ export function AdminPage() {
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
-      // Toggle direction if same field
       setSortDirection(sortDirection === 'desc' ? 'asc' : 'desc');
     } else {
-      // New field, default to desc
       setSortField(field);
       setSortDirection('desc');
     }
@@ -243,7 +242,7 @@ export function AdminPage() {
 
   const getSortIndicator = (field: SortField) => {
     if (sortField !== field) return '';
-    return sortDirection === 'desc' ? ' ▼' : ' ▲';
+    return sortDirection === 'desc' ? ' \u25BC' : ' \u25B2';
   };
 
   const analyzeEmails = async (reanalyze: boolean = false) => {
@@ -253,13 +252,13 @@ export function AdminPage() {
       const response = await fetch(`${API_BASE}/api/admin/analyze-emails`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reanalyze })
+        body: JSON.stringify({ reanalyze }),
+        credentials: 'include',
       });
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.error || 'Analysis failed');
       }
-      // Refresh stats to show new verdicts
       fetchStats(emailFilter, doFilter);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to analyze emails');
@@ -274,7 +273,8 @@ export function AdminPage() {
       const res = await fetch(`${API_BASE}/api/prompts/${promptId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ is_active: !isActive })
+        body: JSON.stringify({ is_active: !isActive }),
+        credentials: 'include',
       });
       if (!res.ok) throw new Error('Failed to update prompt');
       setPrompts(prompts.map(p =>
@@ -289,7 +289,8 @@ export function AdminPage() {
     if (!confirm('Are you sure you want to delete this prompt?')) return;
     try {
       const res = await fetch(`${API_BASE}/api/prompts/${promptId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        credentials: 'include',
       });
       if (!res.ok) throw new Error('Failed to delete prompt');
       setPrompts(prompts.filter(p => p.id !== promptId));
@@ -307,7 +308,8 @@ export function AdminPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           category: newPromptCategory
-        })
+        }),
+        credentials: 'include',
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to generate prompt');
@@ -338,7 +340,8 @@ export function AdminPage() {
           text: newPromptText.trim(),
           category: newPromptCategory,
           is_active: true
-        })
+        }),
+        credentials: 'include',
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to save prompt');
@@ -424,6 +427,7 @@ export function AdminPage() {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: newEventName.trim(), config }),
+          credentials: 'include',
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Failed to update event');
@@ -437,6 +441,7 @@ export function AdminPage() {
             name: newEventName.trim(),
             config,
           }),
+          credentials: 'include',
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Failed to create event');
@@ -453,7 +458,10 @@ export function AdminPage() {
   const deleteEvent = async (eventId: string) => {
     if (!confirm('Are you sure you want to delete this event? This will also delete all consent records.')) return;
     try {
-      const res = await fetch(`${API_BASE}/api/events/${eventId}`, { method: 'DELETE' });
+      const res = await fetch(`${API_BASE}/api/events/${eventId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
       if (!res.ok) throw new Error('Failed to delete event');
       setEvents(events.filter(e => e.id !== eventId));
       if (editingEventId === eventId) clearEventEditor();
@@ -471,7 +479,7 @@ export function AdminPage() {
     if (eventPlayersCache[eventId]) return;
     setEventPlayersLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/events/${eventId}/players`);
+      const res = await fetch(`${API_BASE}/api/admin/events/${eventId}/players`, fetchOpts);
       if (!res.ok) throw new Error('Failed to fetch event players');
       const data = await res.json();
       setEventPlayersCache(prev => ({ ...prev, [eventId]: data }));
@@ -520,6 +528,7 @@ export function AdminPage() {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ is_active: !isActive }),
+        credentials: 'include',
       });
       if (!res.ok) throw new Error('Failed to update event');
       setEvents(events.map(e =>
@@ -530,769 +539,682 @@ export function AdminPage() {
     }
   };
 
+  const emailTypeBadge = (type: string | null) => {
+    if (!type) return <span className="text-gray-400">-</span>;
+    const styles: Record<string, string> = {
+      do_employee: 'bg-blue-50 text-blue-700 border border-blue-200',
+      company: 'bg-purple-50 text-purple-700 border border-purple-200',
+      personal: 'bg-green-50 text-green-700 border border-green-200',
+      typo: 'bg-yellow-50 text-yellow-700 border border-yellow-200',
+      suspicious: 'bg-red-50 text-red-700 border border-red-200',
+      fake: 'bg-red-50 text-red-700 border border-red-200',
+    };
+    return (
+      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${styles[type] || 'bg-gray-100 text-gray-600'}`}>
+        {type === 'do_employee' ? 'Shark' : type}
+      </span>
+    );
+  };
+
+  const tabs: { key: Tab; label: string }[] = [
+    { key: 'players', label: 'Players' },
+    { key: 'prompts', label: 'Prompts' },
+    { key: 'events', label: 'Events' },
+  ];
+
   return (
-    <div className="min-h-screen bg-black p-6">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl text-do-orange text-glow mb-1">ADMIN DASHBOARD</h1>
-            <p className="text-retro-gray text-xs">Type the Cloud - Management</p>
-          </div>
-          <Link to="/" className="text-retro-cyan text-xs hover:text-white">
-            ← BACK TO GAME
-          </Link>
-        </div>
+    <div>
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+        <p className="text-sm text-gray-500 mt-1">Manage players, prompts, and events</p>
+      </div>
 
-        {/* Tabs */}
-        <div className="flex gap-2 mb-6">
-          <button
-            onClick={() => setActiveTab('players')}
-            className={`retro-button text-sm px-6 py-2 ${
-              activeTab === 'players' ? 'bg-do-orange/30 border-do-orange' : 'bg-transparent'
-            }`}
-          >
-            PLAYERS
-          </button>
-          <button
-            onClick={() => setActiveTab('prompts')}
-            className={`retro-button text-sm px-6 py-2 ${
-              activeTab === 'prompts' ? 'bg-do-orange/30 border-do-orange' : 'bg-transparent'
-            }`}
-          >
-            PROMPTS
-          </button>
-          <button
-            onClick={() => setActiveTab('events')}
-            className={`retro-button text-sm px-6 py-2 ${
-              activeTab === 'events' ? 'bg-do-orange/30 border-do-orange' : 'bg-transparent'
-            }`}
-          >
-            EVENTS
-          </button>
-        </div>
+      {/* Tabs */}
+      <div className="border-b border-gray-200 mb-6">
+        <nav className="flex gap-6">
+          {tabs.map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`pb-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === tab.key
+                  ? 'border-do-orange text-do-orange'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </nav>
+      </div>
 
-        {/* Players Tab */}
-        {activeTab === 'players' && (
-          <>
-        {/* Stats Cards */}
-        {stats && (
-          <div className="grid grid-cols-3 gap-4 mb-8">
-            <div className="retro-panel p-4 text-center">
-              <p className="text-retro-gray text-xs mb-1">TOTAL PLAYERS</p>
-              <p className="text-3xl text-do-orange text-glow">{stats.total_players}</p>
+      {/* Players Tab */}
+      {activeTab === 'players' && (
+        <>
+          {/* Stats Cards */}
+          {stats && (
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="bg-white rounded-lg border border-gray-200 p-5">
+                <p className="text-sm text-gray-500 mb-1">Total Players</p>
+                <p className="text-3xl font-bold text-gray-900">{stats.total_players}</p>
+              </div>
+              <div className="bg-white rounded-lg border border-gray-200 p-5">
+                <p className="text-sm text-gray-500 mb-1">Total Games</p>
+                <p className="text-3xl font-bold text-gray-900">{stats.total_games}</p>
+              </div>
+              <div className="bg-white rounded-lg border border-gray-200 p-5">
+                <p className="text-sm text-gray-500 mb-1">Players with Games</p>
+                <p className="text-3xl font-bold text-gray-900">{stats.players_with_games}</p>
+              </div>
             </div>
-            <div className="retro-panel p-4 text-center">
-              <p className="text-retro-gray text-xs mb-1">TOTAL GAMES</p>
-              <p className="text-3xl text-retro-cyan text-glow">{stats.total_games}</p>
-            </div>
-            <div className="retro-panel p-4 text-center">
-              <p className="text-retro-gray text-xs mb-1">PLAYERS WITH GAMES</p>
-              <p className="text-3xl text-retro-green text-glow">{stats.players_with_games}</p>
-            </div>
-          </div>
-        )}
+          )}
 
-        {/* Filter */}
-        <div className="retro-panel p-4 mb-6">
-          {/* DO Filter Buttons */}
-          <div className="flex items-end justify-between mb-4">
-            <div>
-              <label className="block text-retro-cyan text-xs mb-2">
-                SHOW PLAYERS
-              </label>
+          {/* Filter */}
+          <div className="bg-white rounded-lg border border-gray-200 p-5 mb-6">
+            <div className="flex items-end justify-between mb-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Show Players</label>
+                <div className="flex gap-2">
+                  {(['all', 'only_do', 'exclude_do'] as const).map(val => (
+                    <button
+                      key={val}
+                      type="button"
+                      onClick={() => setDoFilter(val)}
+                      className={`px-4 py-2 text-xs font-medium rounded-md border transition-colors ${
+                        doFilter === val
+                          ? 'bg-gray-900 text-white border-gray-900'
+                          : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      {val === 'all' ? 'All' : val === 'only_do' ? 'Only DO' : 'Exclude DO'}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <div className="flex gap-2">
                 <button
                   type="button"
-                  onClick={() => setDoFilter('all')}
-                  className={`retro-button text-xs px-4 py-2 ${
-                    doFilter === 'all' ? 'bg-do-orange/30' : 'bg-transparent'
-                  }`}
+                  onClick={() => analyzeEmails(false)}
+                  disabled={isAnalyzing}
+                  className="px-4 py-2 text-xs font-medium rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50"
                 >
-                  ALL
+                  {isAnalyzing ? 'Analyzing...' : 'Analyze Emails'}
                 </button>
                 <button
                   type="button"
-                  onClick={() => setDoFilter('only_do')}
-                  className={`retro-button text-xs px-4 py-2 ${
-                    doFilter === 'only_do' ? 'bg-do-orange/30' : 'bg-transparent'
-                  }`}
+                  onClick={exportCSV}
+                  disabled={!stats || stats.players.length === 0}
+                  className="px-4 py-2 text-xs font-medium rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50"
                 >
-                  ONLY DO
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDoFilter('exclude_do')}
-                  className={`retro-button text-xs px-4 py-2 ${
-                    doFilter === 'exclude_do' ? 'bg-do-orange/30' : 'bg-transparent'
-                  }`}
-                >
-                  EXCLUDE DO
+                  Export CSV
                 </button>
               </div>
             </div>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => analyzeEmails(false)}
-                disabled={isAnalyzing}
-                className="retro-button text-xs px-4 py-2 bg-do-orange/20 hover:bg-do-orange/30 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isAnalyzing ? 'ANALYZING...' : 'ANALYZE EMAILS'}
-              </button>
-              <button
-                type="button"
-                onClick={exportCSV}
-                disabled={!stats || stats.players.length === 0}
-                className="retro-button text-xs px-4 py-2 bg-retro-cyan/20 hover:bg-retro-cyan/30 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                EXPORT CSV
-              </button>
-            </div>
-          </div>
 
-          {/* Email Filter */}
-          <form onSubmit={handleFilter} className="flex gap-4 items-end">
-            <div className="flex-1">
-              <label className="block text-retro-cyan text-xs mb-2">
-                FILTER BY EMAIL
-              </label>
-              <input
-                type="text"
-                value={emailFilter}
-                onChange={(e) => setEmailFilter(e.target.value)}
-                className="retro-input w-full"
-                placeholder="@example.com, user@test.com"
-              />
-            </div>
-            <button type="submit" className="retro-button">
-              FILTER
-            </button>
-            {emailFilter && (
-              <button
-                type="button"
-                onClick={clearFilter}
-                className="retro-button bg-retro-gray/20"
-              >
-                CLEAR
-              </button>
-            )}
-          </form>
-        </div>
-
-        {/* Error */}
-        {error && (
-          <div className="retro-panel p-4 mb-6 border-retro-red">
-            <p className="text-retro-red text-sm">{error}</p>
-          </div>
-        )}
-
-        {/* Loading */}
-        {isLoading && (
-          <div className="text-center py-12">
-            <p className="text-retro-cyan text-xl animate-pulse">LOADING...</p>
-          </div>
-        )}
-
-        {/* Players Table */}
-        {!isLoading && stats && (
-          <div className="retro-panel p-4">
-            <h2 className="text-retro-cyan text-sm mb-4">
-              PLAYERS ({stats.players.length})
-            </h2>
-
-            {stats.players.length === 0 ? (
-              <p className="text-retro-gray text-center py-8">No players found</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead>
-                    <tr className="text-retro-gray border-b border-retro-gray/30">
-                      <th className="text-left py-2 px-2">NAME</th>
-                      <th className="text-left py-2 px-2">EMAIL</th>
-                      <th className="text-center py-2 px-2">TYPE</th>
-                      <th className="text-right py-2 px-2">GAMES</th>
-                      <th
-                        className="text-right py-2 px-2 cursor-pointer hover:text-do-orange select-none"
-                        onClick={() => handleSort('best_score')}
-                      >
-                        BEST{getSortIndicator('best_score')}
-                      </th>
-                      <th
-                        className="text-right py-2 px-2 cursor-pointer hover:text-do-orange select-none"
-                        onClick={() => handleSort('avg_wpm')}
-                      >
-                        AVG WPM{getSortIndicator('avg_wpm')}
-                      </th>
-                      <th
-                        className="text-right py-2 px-2 cursor-pointer hover:text-do-orange select-none"
-                        onClick={() => handleSort('avg_accuracy')}
-                      >
-                        AVG ACC{getSortIndicator('avg_accuracy')}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {getSortedPlayers().map((player) => (
-                      <tr
-                        key={player.id}
-                        className="border-b border-retro-gray/10 hover:bg-white/5"
-                      >
-                        <td className="py-2 px-2 text-white">
-                          {player.display_name.toUpperCase()}
-                        </td>
-                        <td className="py-2 px-2 text-retro-gray">
-                          {player.email}
-                        </td>
-                        <td className="py-2 px-2 text-center">
-                          {player.email_type ? (
-                            <span className={`px-2 py-0.5 rounded text-[10px] ${
-                              player.email_type === 'do_employee' ? 'bg-retro-cyan/20 text-retro-cyan' :
-                              player.email_type === 'company' ? 'bg-purple-500/20 text-purple-400' :
-                              player.email_type === 'personal' ? 'bg-retro-green/20 text-retro-green' :
-                              player.email_type === 'typo' ? 'bg-yellow-500/20 text-yellow-400' :
-                              'bg-retro-red/20 text-retro-red'
-                            }`}>
-                              {player.email_type === 'do_employee' ? '🦈 SHARK' : player.email_type.toUpperCase()}
-                            </span>
-                          ) : (
-                            <span className="text-retro-gray">-</span>
-                          )}
-                        </td>
-                        <td className="py-2 px-2 text-right text-retro-cyan">
-                          {player.games_played}
-                        </td>
-                        <td className="py-2 px-2 text-right text-do-orange">
-                          {player.best_score.toLocaleString()}
-                        </td>
-                        <td className="py-2 px-2 text-right text-white">
-                          {player.avg_wpm}
-                        </td>
-                        <td
-                          className={`py-2 px-2 text-right ${
-                            player.avg_accuracy >= 95
-                              ? 'text-retro-green'
-                              : player.avg_accuracy >= 80
-                              ? 'text-do-orange'
-                              : 'text-retro-red'
-                          }`}
-                        >
-                          {player.avg_accuracy}%
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
-          </>
-        )}
-
-        {/* Prompts Tab */}
-        {activeTab === 'prompts' && (
-          <>
-            {/* Editor Panel - Sticky */}
-            <div className="retro-panel p-4 mb-6 sticky top-4 z-10 bg-black">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-retro-cyan text-sm">
-                  {editingPromptId ? 'EDIT PROMPT' : 'CREATE NEW PROMPT'}
-                </h2>
-                {editingPromptId && (
-                  <button
-                    onClick={clearEditor}
-                    className="text-retro-gray text-xs hover:text-white"
-                  >
-                    ✕ CANCEL
-                  </button>
-                )}
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-retro-gray text-xs mb-2">CATEGORY</label>
-                <select
-                  value={newPromptCategory}
-                  onChange={(e) => setNewPromptCategory(e.target.value)}
-                  className="retro-input w-full"
-                >
-                  {CATEGORIES.map(cat => (
-                    <option key={cat} value={cat}>{cat.toUpperCase()}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-retro-gray text-xs mb-2">
-                  PROMPT TEXT
-                  <span className={`ml-2 ${
-                    newPromptText.length < 150 ? 'text-retro-red' :
-                    newPromptText.length > 250 ? 'text-retro-red' :
-                    'text-retro-green'
-                  }`}>
-                    ({newPromptText.length}/150-250 chars)
-                  </span>
-                </label>
-                <textarea
-                  value={newPromptText}
-                  onChange={(e) => setNewPromptText(e.target.value)}
-                  className="retro-input w-full h-24 resize-none"
-                  placeholder="Click a prompt below to edit, or type new text..."
+            <form onSubmit={handleFilter} className="flex gap-3 items-end">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Email</label>
+                <input
+                  type="text"
+                  value={emailFilter}
+                  onChange={(e) => setEmailFilter(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-do-orange/50 focus:border-do-orange"
+                  placeholder="@example.com, user@test.com"
                 />
               </div>
+              <button type="submit" className="px-4 py-2 text-sm font-medium rounded-md bg-gray-900 text-white hover:bg-gray-800">
+                Filter
+              </button>
+              {emailFilter && (
+                <button
+                  type="button"
+                  onClick={clearFilter}
+                  className="px-4 py-2 text-sm font-medium rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                >
+                  Clear
+                </button>
+              )}
+            </form>
+          </div>
 
-              <div className="flex gap-4">
-                <button
-                  onClick={generatePrompt}
-                  disabled={isGenerating}
-                  className="retro-button flex-1 bg-purple-500/20 hover:bg-purple-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isGenerating ? 'GENERATING...' : '✨ GENERATE WITH AI'}
-                </button>
-                <button
-                  onClick={savePrompt}
-                  disabled={isSaving || !newPromptText.trim()}
-                  className="retro-button flex-1 bg-retro-green/20 hover:bg-retro-green/30 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSaving ? 'SAVING...' : editingPromptId ? 'UPDATE PROMPT' : 'SAVE PROMPT'}
-                </button>
+          {/* Error */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+              <p className="text-red-700 text-sm">{error}</p>
+            </div>
+          )}
+
+          {/* Loading */}
+          {isLoading && (
+            <div className="text-center py-12">
+              <p className="text-gray-400 animate-pulse">Loading...</p>
+            </div>
+          )}
+
+          {/* Players Table */}
+          {!isLoading && stats && (
+            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+              <div className="px-5 py-4 border-b border-gray-200">
+                <h2 className="text-sm font-semibold text-gray-900">Players ({stats.players.length})</h2>
               </div>
+
+              {stats.players.length === 0 ? (
+                <p className="text-gray-400 text-center py-12">No players found</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wide">
+                        <th className="text-left py-3 px-4 font-medium">Name</th>
+                        <th className="text-left py-3 px-4 font-medium">Email</th>
+                        <th className="text-center py-3 px-4 font-medium">Type</th>
+                        <th className="text-right py-3 px-4 font-medium">Games</th>
+                        <th
+                          className="text-right py-3 px-4 font-medium cursor-pointer hover:text-gray-700 select-none"
+                          onClick={() => handleSort('best_score')}
+                        >
+                          Best{getSortIndicator('best_score')}
+                        </th>
+                        <th
+                          className="text-right py-3 px-4 font-medium cursor-pointer hover:text-gray-700 select-none"
+                          onClick={() => handleSort('avg_wpm')}
+                        >
+                          Avg WPM{getSortIndicator('avg_wpm')}
+                        </th>
+                        <th
+                          className="text-right py-3 px-4 font-medium cursor-pointer hover:text-gray-700 select-none"
+                          onClick={() => handleSort('avg_accuracy')}
+                        >
+                          Avg Acc{getSortIndicator('avg_accuracy')}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {getSortedPlayers().map((player) => (
+                        <tr key={player.id} className="hover:bg-gray-50">
+                          <td className="py-3 px-4 text-gray-900 font-medium">{player.display_name}</td>
+                          <td className="py-3 px-4 text-gray-500">{player.email}</td>
+                          <td className="py-3 px-4 text-center">{emailTypeBadge(player.email_type)}</td>
+                          <td className="py-3 px-4 text-right text-gray-700">{player.games_played}</td>
+                          <td className="py-3 px-4 text-right font-medium text-gray-900">{player.best_score.toLocaleString()}</td>
+                          <td className="py-3 px-4 text-right text-gray-700">{player.avg_wpm}</td>
+                          <td className={`py-3 px-4 text-right ${
+                            player.avg_accuracy >= 95 ? 'text-green-600' :
+                            player.avg_accuracy >= 80 ? 'text-yellow-600' :
+                            'text-red-600'
+                          }`}>
+                            {player.avg_accuracy}%
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Prompts Tab */}
+      {activeTab === 'prompts' && (
+        <>
+          {/* Editor Panel */}
+          <div className="bg-white rounded-lg border border-gray-200 p-5 mb-6 sticky top-4 z-10">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-sm font-semibold text-gray-900">
+                {editingPromptId ? 'Edit Prompt' : 'Create New Prompt'}
+              </h2>
+              {editingPromptId && (
+                <button onClick={clearEditor} className="text-gray-400 text-sm hover:text-gray-600">
+                  Cancel
+                </button>
+              )}
             </div>
 
-            {/* Prompts Error */}
-            {promptsError && (
-              <div className="retro-panel p-4 mb-6 border-retro-red">
-                <p className="text-retro-red text-sm">{promptsError}</p>
-              </div>
-            )}
-
-            {/* Prompts Loading */}
-            {promptsLoading && (
-              <div className="text-center py-12">
-                <p className="text-retro-cyan text-xl animate-pulse">LOADING PROMPTS...</p>
-              </div>
-            )}
-
-            {/* Prompts Table */}
-            {!promptsLoading && (
-              <div className="retro-panel p-4 overflow-visible">
-                <h2 className="text-retro-cyan text-sm mb-4">
-                  PROMPTS ({prompts.length})
-                </h2>
-
-                {prompts.length === 0 ? (
-                  <p className="text-retro-gray text-center py-8">No prompts found</p>
-                ) : (
-                  <div className="overflow-x-auto overflow-y-visible">
-                    <table className="w-full text-xs">
-                      <thead>
-                        <tr className="text-retro-gray border-b border-retro-gray/30">
-                          <th className="text-left py-2 px-2">TEXT</th>
-                          <th className="text-center py-2 px-2">CATEGORY</th>
-                          <th className="text-right py-2 px-2">USED</th>
-                          <th className="text-center py-2 px-2">CREATED</th>
-                          <th className="text-center py-2 px-2">ACTIVE</th>
-                          <th className="text-center py-2 px-2">ACTIONS</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {prompts.map((prompt) => (
-                          <tr
-                            key={prompt.id}
-                            onClick={() => editPrompt(prompt)}
-                            className={`border-b border-retro-gray/10 cursor-pointer transition-colors ${
-                              editingPromptId === prompt.id
-                                ? 'bg-do-orange/20 border-l-2 border-l-do-orange'
-                                : 'hover:bg-white/5'
-                            } ${!prompt.is_active ? 'opacity-50' : ''}`}
-                          >
-                            <td className="py-2 px-2 text-white max-w-xs">
-                              <span className="block truncate">
-                                {prompt.text.length > 60 ? prompt.text.slice(0, 60) + '...' : prompt.text}
-                              </span>
-                            </td>
-                            <td className="py-2 px-2 text-center">
-                              <span className="px-2 py-0.5 rounded text-[10px] bg-do-orange/20 text-do-orange">
-                                {prompt.category.toUpperCase()}
-                              </span>
-                            </td>
-                            <td className="py-2 px-2 text-right text-retro-cyan">
-                              {prompt.times_used}
-                            </td>
-                            <td className="py-2 px-2 text-center text-retro-gray">
-                              {new Date(prompt.created_at).toLocaleDateString()}
-                            </td>
-                            <td className="py-2 px-2 text-center">
-                              <button
-                                onClick={(e) => { e.stopPropagation(); togglePromptActive(prompt.id, prompt.is_active); }}
-                                className={`px-3 py-1 rounded text-[10px] transition-colors ${
-                                  prompt.is_active
-                                    ? 'bg-retro-green/30 text-retro-green hover:bg-retro-green/50'
-                                    : 'bg-retro-gray/30 text-retro-gray hover:bg-retro-gray/50'
-                                }`}
-                              >
-                                {prompt.is_active ? 'ON' : 'OFF'}
-                              </button>
-                            </td>
-                            <td className="py-2 px-2 text-center">
-                              <button
-                                onClick={(e) => { e.stopPropagation(); deletePrompt(prompt.id); }}
-                                className="px-3 py-1 rounded text-[10px] bg-retro-red/20 text-retro-red hover:bg-retro-red/40 transition-colors"
-                              >
-                                DELETE
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-            )}
-          </>
-        )}
-
-        {/* Events Tab */}
-        {activeTab === 'events' && (
-          <>
-            {/* Event Editor */}
-            <div className="retro-panel p-4 mb-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-retro-cyan text-sm">
-                  {editingEventId ? 'EDIT EVENT' : 'CREATE NEW EVENT'}
-                </h2>
-                {editingEventId && (
-                  <button
-                    onClick={clearEventEditor}
-                    className="text-retro-gray text-xs hover:text-white"
-                  >
-                    ✕ CANCEL
-                  </button>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="block text-retro-gray text-xs mb-2">SLUG (URL PATH)</label>
-                  <input
-                    type="text"
-                    value={newEventSlug}
-                    onChange={(e) => setNewEventSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
-                    className="retro-input w-full"
-                    placeholder="ai-summit-2026"
-                    disabled={!!editingEventId}
-                  />
-                  {editingEventId && (
-                    <p className="text-retro-gray text-[10px] mt-1">Slug cannot be changed after creation</p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-retro-gray text-xs mb-2">EVENT NAME</label>
-                  <input
-                    type="text"
-                    value={newEventName}
-                    onChange={(e) => setNewEventName(e.target.value)}
-                    className="retro-input w-full"
-                    placeholder="AI Summit NYC 2026"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="block text-retro-gray text-xs mb-2">SUBTITLE (OPTIONAL)</label>
-                  <input
-                    type="text"
-                    value={newEventSubtitle}
-                    onChange={(e) => setNewEventSubtitle(e.target.value)}
-                    className="retro-input w-full"
-                    placeholder="AI SUMMIT EDITION"
-                  />
-                </div>
-                <div>
-                  <label className="block text-retro-gray text-xs mb-2">LEADERBOARD TITLE (OPTIONAL)</label>
-                  <input
-                    type="text"
-                    value={newEventLeaderboardTitle}
-                    onChange={(e) => setNewEventLeaderboardTitle(e.target.value)}
-                    className="retro-input w-full"
-                    placeholder="AI SUMMIT LEADERBOARD"
-                  />
-                </div>
-              </div>
-
-              {/* Consent Config */}
-              <div className="mb-4 p-3 bg-black/30 rounded">
-                <label className="flex items-center gap-3 cursor-pointer mb-3">
-                  <input
-                    type="checkbox"
-                    checked={newEventConsentEnabled}
-                    onChange={(e) => setNewEventConsentEnabled(e.target.checked)}
-                    className="accent-do-orange"
-                  />
-                  <span className="text-retro-gray text-xs">ENABLE CONSENT CHECKBOX</span>
-                </label>
-
-                {newEventConsentEnabled && (
-                  <div className="space-y-3 pl-6">
-                    <div>
-                      <label className="block text-retro-gray text-xs mb-2">CONSENT LABEL</label>
-                      <input
-                        type="text"
-                        value={newEventConsentLabel}
-                        onChange={(e) => setNewEventConsentLabel(e.target.value)}
-                        className="retro-input w-full"
-                      />
-                    </div>
-                    <label className="flex items-center gap-3 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={newEventConsentRequired}
-                        onChange={(e) => setNewEventConsentRequired(e.target.checked)}
-                        className="accent-do-orange"
-                      />
-                      <span className="text-retro-gray text-xs">REQUIRED TO PLAY</span>
-                    </label>
-                  </div>
-                )}
-              </div>
-
-              <button
-                onClick={saveEvent}
-                disabled={isCreatingEvent || !newEventSlug.trim() || !newEventName.trim()}
-                className="retro-button w-full bg-retro-green/20 hover:bg-retro-green/30 disabled:opacity-50 disabled:cursor-not-allowed"
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+              <select
+                value={newPromptCategory}
+                onChange={(e) => setNewPromptCategory(e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-do-orange/50 focus:border-do-orange bg-white"
               >
-                {isCreatingEvent ? 'SAVING...' : editingEventId ? 'UPDATE EVENT' : 'CREATE EVENT'}
+                {CATEGORIES.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Prompt Text
+                <span className={`ml-2 text-xs font-normal ${
+                  newPromptText.length < 150 ? 'text-red-500' :
+                  newPromptText.length > 250 ? 'text-red-500' :
+                  'text-green-600'
+                }`}>
+                  ({newPromptText.length}/150-250 chars)
+                </span>
+              </label>
+              <textarea
+                value={newPromptText}
+                onChange={(e) => setNewPromptText(e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md h-24 resize-none focus:outline-none focus:ring-2 focus:ring-do-orange/50 focus:border-do-orange"
+                placeholder="Click a prompt below to edit, or type new text..."
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={generatePrompt}
+                disabled={isGenerating}
+                className="flex-1 px-4 py-2 text-sm font-medium rounded-md border border-purple-300 bg-purple-50 text-purple-700 hover:bg-purple-100 disabled:opacity-50"
+              >
+                {isGenerating ? 'Generating...' : 'Generate with AI'}
+              </button>
+              <button
+                onClick={savePrompt}
+                disabled={isSaving || !newPromptText.trim()}
+                className="flex-1 px-4 py-2 text-sm font-medium rounded-md bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-50"
+              >
+                {isSaving ? 'Saving...' : editingPromptId ? 'Update Prompt' : 'Save Prompt'}
               </button>
             </div>
+          </div>
 
-            {/* Events Error */}
-            {eventsError && (
-              <div className="retro-panel p-4 mb-6 border-retro-red">
-                <p className="text-retro-red text-sm">{eventsError}</p>
+          {/* Prompts Error */}
+          {promptsError && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+              <p className="text-red-700 text-sm">{promptsError}</p>
+            </div>
+          )}
+
+          {/* Prompts Loading */}
+          {promptsLoading && (
+            <div className="text-center py-12">
+              <p className="text-gray-400 animate-pulse">Loading prompts...</p>
+            </div>
+          )}
+
+          {/* Prompts Table */}
+          {!promptsLoading && (
+            <div className="bg-white rounded-lg border border-gray-200 overflow-visible">
+              <div className="px-5 py-4 border-b border-gray-200">
+                <h2 className="text-sm font-semibold text-gray-900">Prompts ({prompts.length})</h2>
               </div>
-            )}
 
-            {/* Events Loading */}
-            {eventsLoading && (
-              <div className="text-center py-12">
-                <p className="text-retro-cyan text-xl animate-pulse">LOADING EVENTS...</p>
-              </div>
-            )}
-
-            {/* Events List */}
-            {!eventsLoading && (
-              <div className="retro-panel p-4">
-                <h2 className="text-retro-cyan text-sm mb-4">
-                  EVENTS ({events.length})
-                </h2>
-
-                {events.length === 0 ? (
-                  <p className="text-retro-gray text-center py-8">No events created yet</p>
-                ) : (
-                  <div className="space-y-3">
-                    {events.map((event) => (
-                      <div
-                        key={event.id}
-                        className={`p-4 rounded border transition-colors ${
-                          editingEventId === event.id
-                            ? 'border-do-orange/50 bg-do-orange/10'
-                            : event.is_active
-                            ? 'border-retro-gray/30 bg-black/30'
-                            : 'border-retro-gray/10 bg-black/10 opacity-60'
-                        }`}
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-1">
-                              <span className="text-white text-sm">{event.name}</span>
-                              <span className={`px-2 py-0.5 rounded text-[10px] ${
-                                event.is_active
-                                  ? 'bg-retro-green/20 text-retro-green'
-                                  : 'bg-retro-gray/20 text-retro-gray'
-                              }`}>
-                                {event.is_active ? 'ACTIVE' : 'INACTIVE'}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-4 text-xs">
-                              <span className="text-retro-cyan">/{event.slug}</span>
-                              {event.config?.subtitle && (
-                                <span className="text-retro-gray">{event.config.subtitle}</span>
-                              )}
-                              {event.config?.consent?.enabled && (
-                                <span className="text-do-orange">
-                                  CONSENT {event.config.consent.required ? '(REQUIRED)' : '(OPTIONAL)'}
-                                </span>
-                              )}
-                            </div>
-                            <div className="text-retro-gray text-[10px] mt-1">
-                              Created {new Date(event.created_at).toLocaleDateString()}
-                            </div>
-                          </div>
-                          <div className="flex gap-2">
+              {prompts.length === 0 ? (
+                <p className="text-gray-400 text-center py-12">No prompts found</p>
+              ) : (
+                <div className="overflow-x-auto overflow-y-visible">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wide">
+                        <th className="text-left py-3 px-4 font-medium">Text</th>
+                        <th className="text-center py-3 px-4 font-medium">Category</th>
+                        <th className="text-right py-3 px-4 font-medium">Used</th>
+                        <th className="text-center py-3 px-4 font-medium">Created</th>
+                        <th className="text-center py-3 px-4 font-medium">Active</th>
+                        <th className="text-center py-3 px-4 font-medium">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {prompts.map((prompt) => (
+                        <tr
+                          key={prompt.id}
+                          onClick={() => editPrompt(prompt)}
+                          className={`cursor-pointer transition-colors ${
+                            editingPromptId === prompt.id
+                              ? 'bg-orange-50 border-l-2 border-l-do-orange'
+                              : 'hover:bg-gray-50'
+                          } ${!prompt.is_active ? 'opacity-50' : ''}`}
+                        >
+                          <td className="py-3 px-4 text-gray-900 max-w-xs">
+                            <span className="block truncate">
+                              {prompt.text.length > 60 ? prompt.text.slice(0, 60) + '...' : prompt.text}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                              {prompt.category}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-right text-gray-700">{prompt.times_used}</td>
+                          <td className="py-3 px-4 text-center text-gray-500">
+                            {new Date(prompt.created_at).toLocaleDateString()}
+                          </td>
+                          <td className="py-3 px-4 text-center">
                             <button
-                              onClick={() => fetchEventPlayers(event.id)}
-                              className={`retro-button text-xs px-3 py-1 ${
-                                expandedEventId === event.id
-                                  ? 'bg-purple-500/30 text-purple-400'
-                                  : 'bg-purple-500/20 hover:bg-purple-500/30 text-purple-400'
+                              onClick={(e) => { e.stopPropagation(); togglePromptActive(prompt.id, prompt.is_active); }}
+                              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                                prompt.is_active
+                                  ? 'bg-green-50 text-green-700 border border-green-200 hover:bg-green-100'
+                                  : 'bg-gray-100 text-gray-500 border border-gray-200 hover:bg-gray-200'
                               }`}
                             >
-                              {expandedEventId === event.id ? 'HIDE PLAYERS' : 'VIEW PLAYERS'}
+                              {prompt.is_active ? 'On' : 'Off'}
                             </button>
+                          </td>
+                          <td className="py-3 px-4 text-center">
                             <button
-                              onClick={() => {
-                                navigator.clipboard.writeText(`${window.location.origin}/${event.slug}`);
-                              }}
-                              className="retro-button text-xs px-3 py-1 bg-retro-cyan/20 hover:bg-retro-cyan/30"
-                              title="Copy event URL"
+                              onClick={(e) => { e.stopPropagation(); deletePrompt(prompt.id); }}
+                              className="px-3 py-1 rounded-md text-xs font-medium text-red-600 hover:bg-red-50 transition-colors"
                             >
-                              COPY URL
+                              Delete
                             </button>
-                            <button
-                              onClick={() => editEvent(event)}
-                              className="retro-button text-xs px-3 py-1 bg-do-orange/20 hover:bg-do-orange/30"
-                            >
-                              EDIT
-                            </button>
-                            <button
-                              onClick={() => toggleEventActive(event.id, event.is_active)}
-                              className={`retro-button text-xs px-3 py-1 ${
-                                event.is_active
-                                  ? 'bg-retro-gray/20 hover:bg-retro-gray/30'
-                                  : 'bg-retro-green/20 hover:bg-retro-green/30'
-                              }`}
-                            >
-                              {event.is_active ? 'DEACTIVATE' : 'ACTIVATE'}
-                            </button>
-                            <button
-                              onClick={() => deleteEvent(event.id)}
-                              className="retro-button text-xs px-3 py-1 bg-retro-red/20 text-retro-red hover:bg-retro-red/40"
-                            >
-                              DELETE
-                            </button>
-                          </div>
-                        </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+        </>
+      )}
 
-                        {/* Event Players Expansion */}
-                        {expandedEventId === event.id && (
-                          <div className="mt-4 pt-4 border-t border-retro-gray/20">
-                            {eventPlayersLoading && !eventPlayersCache[event.id] ? (
-                              <p className="text-retro-cyan text-xs animate-pulse text-center py-4">LOADING PLAYERS...</p>
-                            ) : eventPlayersCache[event.id] ? (
-                              <>
-                                {/* Summary stats */}
-                                <div className="flex items-center gap-6 mb-4">
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-retro-gray text-xs">PLAYERS:</span>
-                                    <span className="text-do-orange text-sm">{eventPlayersCache[event.id].total_players}</span>
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-retro-gray text-xs">TOTAL GAMES:</span>
-                                    <span className="text-retro-cyan text-sm">{eventPlayersCache[event.id].total_games}</span>
-                                  </div>
-                                  <button
-                                    onClick={() => exportEventCSV(event.id)}
-                                    disabled={eventPlayersCache[event.id].players.length === 0}
-                                    className="retro-button text-xs px-3 py-1 bg-retro-cyan/20 hover:bg-retro-cyan/30 disabled:opacity-50 disabled:cursor-not-allowed ml-auto"
-                                  >
-                                    EXPORT CSV
-                                  </button>
-                                </div>
+      {/* Events Tab */}
+      {activeTab === 'events' && (
+        <>
+          {/* Event Editor */}
+          <div className="bg-white rounded-lg border border-gray-200 p-5 mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-sm font-semibold text-gray-900">
+                {editingEventId ? 'Edit Event' : 'Create New Event'}
+              </h2>
+              {editingEventId && (
+                <button onClick={clearEventEditor} className="text-gray-400 text-sm hover:text-gray-600">
+                  Cancel
+                </button>
+              )}
+            </div>
 
-                                {/* Players table */}
-                                {eventPlayersCache[event.id].players.length === 0 ? (
-                                  <p className="text-retro-gray text-center py-4 text-xs">No players registered for this event</p>
-                                ) : (
-                                  <div className="overflow-x-auto">
-                                    <table className="w-full text-xs">
-                                      <thead>
-                                        <tr className="text-retro-gray border-b border-retro-gray/30">
-                                          <th className="text-left py-2 px-2">FIRST NAME</th>
-                                          <th className="text-left py-2 px-2">LAST NAME</th>
-                                          <th className="text-left py-2 px-2">EMAIL</th>
-                                          <th className="text-center py-2 px-2">TYPE</th>
-                                          <th className="text-center py-2 px-2">CONSENTED</th>
-                                          <th className="text-left py-2 px-2">IP</th>
-                                          <th className="text-left py-2 px-2">JOINED AT</th>
-                                          <th className="text-right py-2 px-2">GAMES</th>
-                                        </tr>
-                                      </thead>
-                                      <tbody>
-                                        {eventPlayersCache[event.id].players.map((player, idx) => (
-                                          <tr
-                                            key={idx}
-                                            className="border-b border-retro-gray/10 hover:bg-white/5"
-                                          >
-                                            <td className="py-2 px-2 text-white">
-                                              {(player.first_name || '-').toUpperCase()}
-                                            </td>
-                                            <td className="py-2 px-2 text-white">
-                                              {(player.last_name || '-').toUpperCase()}
-                                            </td>
-                                            <td className="py-2 px-2 text-retro-gray">
-                                              {player.email}
-                                            </td>
-                                            <td className="py-2 px-2 text-center">
-                                              {player.email_type ? (
-                                                <span className={`px-2 py-0.5 rounded text-[10px] ${
-                                                  player.email_type === 'do_employee' ? 'bg-retro-cyan/20 text-retro-cyan' :
-                                                  player.email_type === 'company' ? 'bg-purple-500/20 text-purple-400' :
-                                                  player.email_type === 'personal' ? 'bg-retro-green/20 text-retro-green' :
-                                                  player.email_type === 'typo' ? 'bg-yellow-500/20 text-yellow-400' :
-                                                  'bg-retro-red/20 text-retro-red'
-                                                }`}>
-                                                  {player.email_type === 'do_employee' ? 'SHARK' : player.email_type.toUpperCase()}
-                                                </span>
-                                              ) : (
-                                                <span className="text-retro-gray">-</span>
-                                              )}
-                                            </td>
-                                            <td className="py-2 px-2 text-center">
-                                              {player.consented === true ? (
-                                                <span className="text-retro-green">YES</span>
-                                              ) : player.consented === false ? (
-                                                <span className="text-retro-red">NO</span>
-                                              ) : (
-                                                <span className="text-retro-gray">-</span>
-                                              )}
-                                            </td>
-                                            <td className="py-2 px-2 text-retro-gray text-[10px]">
-                                              {player.ip_address || '-'}
-                                            </td>
-                                            <td className="py-2 px-2 text-retro-gray text-[10px]">
-                                              {player.joined_event_at
-                                                ? new Date(player.joined_event_at).toLocaleString()
-                                                : '-'}
-                                            </td>
-                                            <td className="py-2 px-2 text-right text-retro-cyan">
-                                              {player.games_played}
-                                            </td>
-                                          </tr>
-                                        ))}
-                                      </tbody>
-                                    </table>
-                                  </div>
-                                )}
-                              </>
-                            ) : null}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Slug (URL path)</label>
+                <input
+                  type="text"
+                  value={newEventSlug}
+                  onChange={(e) => setNewEventSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-do-orange/50 focus:border-do-orange disabled:bg-gray-100 disabled:text-gray-500"
+                  placeholder="ai-summit-2026"
+                  disabled={!!editingEventId}
+                />
+                {editingEventId && (
+                  <p className="text-gray-400 text-xs mt-1">Slug cannot be changed after creation</p>
                 )}
               </div>
-            )}
-          </>
-        )}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Event Name</label>
+                <input
+                  type="text"
+                  value={newEventName}
+                  onChange={(e) => setNewEventName(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-do-orange/50 focus:border-do-orange"
+                  placeholder="AI Summit NYC 2026"
+                />
+              </div>
+            </div>
 
-        {/* Footer */}
-        <div className="text-center mt-8">
-          <p className="text-retro-gray text-xs">POWERED BY DIGITALOCEAN</p>
-        </div>
-      </div>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Subtitle (optional)</label>
+                <input
+                  type="text"
+                  value={newEventSubtitle}
+                  onChange={(e) => setNewEventSubtitle(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-do-orange/50 focus:border-do-orange"
+                  placeholder="AI SUMMIT EDITION"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Leaderboard Title (optional)</label>
+                <input
+                  type="text"
+                  value={newEventLeaderboardTitle}
+                  onChange={(e) => setNewEventLeaderboardTitle(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-do-orange/50 focus:border-do-orange"
+                  placeholder="AI SUMMIT LEADERBOARD"
+                />
+              </div>
+            </div>
+
+            {/* Consent Config */}
+            <div className="mb-4 p-4 bg-gray-50 rounded-md border border-gray-200">
+              <label className="flex items-center gap-3 cursor-pointer mb-3">
+                <input
+                  type="checkbox"
+                  checked={newEventConsentEnabled}
+                  onChange={(e) => setNewEventConsentEnabled(e.target.checked)}
+                  className="accent-do-orange"
+                />
+                <span className="text-sm text-gray-700">Enable consent checkbox</span>
+              </label>
+
+              {newEventConsentEnabled && (
+                <div className="space-y-3 pl-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Consent Label</label>
+                    <input
+                      type="text"
+                      value={newEventConsentLabel}
+                      onChange={(e) => setNewEventConsentLabel(e.target.value)}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-do-orange/50 focus:border-do-orange"
+                    />
+                  </div>
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={newEventConsentRequired}
+                      onChange={(e) => setNewEventConsentRequired(e.target.checked)}
+                      className="accent-do-orange"
+                    />
+                    <span className="text-sm text-gray-700">Required to play</span>
+                  </label>
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={saveEvent}
+              disabled={isCreatingEvent || !newEventSlug.trim() || !newEventName.trim()}
+              className="w-full px-4 py-2 text-sm font-medium rounded-md bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-50"
+            >
+              {isCreatingEvent ? 'Saving...' : editingEventId ? 'Update Event' : 'Create Event'}
+            </button>
+          </div>
+
+          {/* Events Error */}
+          {eventsError && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+              <p className="text-red-700 text-sm">{eventsError}</p>
+            </div>
+          )}
+
+          {/* Events Loading */}
+          {eventsLoading && (
+            <div className="text-center py-12">
+              <p className="text-gray-400 animate-pulse">Loading events...</p>
+            </div>
+          )}
+
+          {/* Events List */}
+          {!eventsLoading && (
+            <div className="bg-white rounded-lg border border-gray-200">
+              <div className="px-5 py-4 border-b border-gray-200">
+                <h2 className="text-sm font-semibold text-gray-900">Events ({events.length})</h2>
+              </div>
+
+              {events.length === 0 ? (
+                <p className="text-gray-400 text-center py-12">No events created yet</p>
+              ) : (
+                <div className="divide-y divide-gray-100">
+                  {events.map((event) => (
+                    <div
+                      key={event.id}
+                      className={`p-5 transition-colors ${
+                        editingEventId === event.id
+                          ? 'bg-orange-50'
+                          : event.is_active
+                          ? ''
+                          : 'opacity-60'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-1">
+                            <span className="text-sm font-medium text-gray-900">{event.name}</span>
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                              event.is_active
+                                ? 'bg-green-50 text-green-700 border border-green-200'
+                                : 'bg-gray-100 text-gray-500 border border-gray-200'
+                            }`}>
+                              {event.is_active ? 'Active' : 'Inactive'}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-4 text-xs">
+                            <span className="text-blue-600 font-mono">/{event.slug}</span>
+                            {event.config?.subtitle && (
+                              <span className="text-gray-500">{event.config.subtitle}</span>
+                            )}
+                            {event.config?.consent?.enabled && (
+                              <span className="text-orange-600">
+                                Consent {event.config.consent.required ? '(required)' : '(optional)'}
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-gray-400 text-xs mt-1">
+                            Created {new Date(event.created_at).toLocaleDateString()}
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => fetchEventPlayers(event.id)}
+                            className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${
+                              expandedEventId === event.id
+                                ? 'bg-purple-50 text-purple-700 border-purple-200'
+                                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                            }`}
+                          >
+                            {expandedEventId === event.id ? 'Hide Players' : 'View Players'}
+                          </button>
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(`${window.location.origin}/${event.slug}`);
+                            }}
+                            className="px-3 py-1.5 text-xs font-medium rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                            title="Copy event URL"
+                          >
+                            Copy URL
+                          </button>
+                          <button
+                            onClick={() => editEvent(event)}
+                            className="px-3 py-1.5 text-xs font-medium rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => toggleEventActive(event.id, event.is_active)}
+                            className="px-3 py-1.5 text-xs font-medium rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                          >
+                            {event.is_active ? 'Deactivate' : 'Activate'}
+                          </button>
+                          <button
+                            onClick={() => deleteEvent(event.id)}
+                            className="px-3 py-1.5 text-xs font-medium rounded-md text-red-600 border border-red-200 hover:bg-red-50"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Event Players Expansion */}
+                      {expandedEventId === event.id && (
+                        <div className="mt-4 pt-4 border-t border-gray-200">
+                          {eventPlayersLoading && !eventPlayersCache[event.id] ? (
+                            <p className="text-gray-400 text-sm animate-pulse text-center py-4">Loading players...</p>
+                          ) : eventPlayersCache[event.id] ? (
+                            <>
+                              {/* Summary stats */}
+                              <div className="flex items-center gap-6 mb-4">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm text-gray-500">Players:</span>
+                                  <span className="text-sm font-semibold text-gray-900">{eventPlayersCache[event.id].total_players}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm text-gray-500">Total Games:</span>
+                                  <span className="text-sm font-semibold text-gray-900">{eventPlayersCache[event.id].total_games}</span>
+                                </div>
+                                <button
+                                  onClick={() => exportEventCSV(event.id)}
+                                  disabled={eventPlayersCache[event.id].players.length === 0}
+                                  className="px-3 py-1.5 text-xs font-medium rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 ml-auto"
+                                >
+                                  Export CSV
+                                </button>
+                              </div>
+
+                              {/* Players table */}
+                              {eventPlayersCache[event.id].players.length === 0 ? (
+                                <p className="text-gray-400 text-center py-4 text-sm">No players registered for this event</p>
+                              ) : (
+                                <div className="overflow-x-auto">
+                                  <table className="w-full text-sm">
+                                    <thead>
+                                      <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wide">
+                                        <th className="text-left py-2 px-3 font-medium">First Name</th>
+                                        <th className="text-left py-2 px-3 font-medium">Last Name</th>
+                                        <th className="text-left py-2 px-3 font-medium">Email</th>
+                                        <th className="text-center py-2 px-3 font-medium">Type</th>
+                                        <th className="text-center py-2 px-3 font-medium">Consented</th>
+                                        <th className="text-left py-2 px-3 font-medium">IP</th>
+                                        <th className="text-left py-2 px-3 font-medium">Joined At</th>
+                                        <th className="text-right py-2 px-3 font-medium">Games</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-100">
+                                      {eventPlayersCache[event.id].players.map((player, idx) => (
+                                        <tr key={idx} className="hover:bg-gray-50">
+                                          <td className="py-2 px-3 text-gray-900">{player.first_name || '-'}</td>
+                                          <td className="py-2 px-3 text-gray-900">{player.last_name || '-'}</td>
+                                          <td className="py-2 px-3 text-gray-500">{player.email}</td>
+                                          <td className="py-2 px-3 text-center">{emailTypeBadge(player.email_type)}</td>
+                                          <td className="py-2 px-3 text-center">
+                                            {player.consented === true ? (
+                                              <span className="text-green-600">Yes</span>
+                                            ) : player.consented === false ? (
+                                              <span className="text-red-600">No</span>
+                                            ) : (
+                                              <span className="text-gray-400">-</span>
+                                            )}
+                                          </td>
+                                          <td className="py-2 px-3 text-gray-400 text-xs">{player.ip_address || '-'}</td>
+                                          <td className="py-2 px-3 text-gray-400 text-xs">
+                                            {player.joined_event_at
+                                              ? new Date(player.joined_event_at).toLocaleString()
+                                              : '-'}
+                                          </td>
+                                          <td className="py-2 px-3 text-right text-gray-700">{player.games_played}</td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              )}
+                            </>
+                          ) : null}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }

@@ -4,12 +4,12 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import './index.css'
 import App from './App.tsx'
 import { LeaderboardPage } from './pages/LeaderboardPage.tsx'
-import { AdminPage } from './pages/AdminPage.tsx'
 import { VibePage } from './pages/VibePage.tsx'
 import { ThemeProvider } from './contexts/ThemeContext.tsx'
 import { AuthProvider } from './contexts/AuthContext'
 import LoginPage, { VerifyPage } from './pages/LoginPage'
 import DashboardLayout from './layouts/DashboardLayout'
+import AdminLayout from './layouts/AdminLayout'
 import DashboardPage from './pages/DashboardPage'
 import DashboardEventPage from './pages/DashboardEventPage'
 import PricingPage from './pages/PricingPage'
@@ -22,7 +22,7 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/" element={<App />} />
           <Route path="/leaderboard" element={<LeaderboardPage />} />
           <Route path="/vibe" element={<VibePage />} />
-          {import.meta.env.DEV && <Route path="/admin" element={<AdminPage />} />}
+          <Route path="/admin" element={<AuthProvider><AdminLayout /></AuthProvider>} />
           <Route path="/login" element={<AuthProvider><LoginPage /></AuthProvider>} />
           <Route path="/login/verify" element={<AuthProvider><VerifyPage /></AuthProvider>} />
           <Route path="/host" element={<PricingPage />} />

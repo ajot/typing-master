@@ -1,6 +1,6 @@
-import os
 from flask import Blueprint, request, jsonify
 from models import db, Event, EventConsent
+from middleware import require_admin
 from datetime import datetime
 
 events_bp = Blueprint('events', __name__)
@@ -69,11 +69,9 @@ def record_consent(event_id):
 
 
 @events_bp.route('/events', methods=['POST'])
+@require_admin
 def create_event():
     """Create a new event (admin)"""
-    if os.getenv('FLASK_ENV') != 'development' and os.getenv('ENABLE_ADMIN') != 'true':
-        return jsonify({'error': 'Admin access required'}), 403
-
     data = request.get_json()
     if not data:
         return jsonify({'error': 'No data provided'}), 400
@@ -100,11 +98,9 @@ def create_event():
 
 
 @events_bp.route('/events/<event_id>', methods=['PATCH'])
+@require_admin
 def update_event(event_id):
     """Update an event (admin)"""
-    if os.getenv('FLASK_ENV') != 'development' and os.getenv('ENABLE_ADMIN') != 'true':
-        return jsonify({'error': 'Admin access required'}), 403
-
     event = Event.query.get(event_id)
     if not event:
         return jsonify({'error': 'Event not found'}), 404
@@ -125,11 +121,9 @@ def update_event(event_id):
 
 
 @events_bp.route('/events/<event_id>', methods=['DELETE'])
+@require_admin
 def delete_event(event_id):
     """Delete an event (admin)"""
-    if os.getenv('FLASK_ENV') != 'development' and os.getenv('ENABLE_ADMIN') != 'true':
-        return jsonify({'error': 'Admin access required'}), 403
-
     event = Event.query.get(event_id)
     if not event:
         return jsonify({'error': 'Event not found'}), 404
@@ -143,10 +137,8 @@ def delete_event(event_id):
 
 
 @events_bp.route('/events', methods=['GET'])
+@require_admin
 def list_events():
     """List all events (admin)"""
-    if os.getenv('FLASK_ENV') != 'development' and os.getenv('ENABLE_ADMIN') != 'true':
-        return jsonify({'error': 'Admin access required'}), 403
-
     events = Event.query.order_by(Event.created_at.desc()).all()
     return jsonify([e.to_dict() for e in events])

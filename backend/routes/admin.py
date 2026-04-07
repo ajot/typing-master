@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from sqlalchemy import func, or_, cast, Numeric
 from models import db, Player, Score, Event, EventConsent, Organizer, Prompt
+from middleware import require_admin
 import re
 
 admin_bp = Blueprint('admin', __name__)
@@ -132,6 +133,7 @@ def classify_email(email: str) -> str:
 
 
 @admin_bp.route('/api/admin/stats', methods=['GET'])
+@require_admin
 def get_stats():
     """Get admin dashboard stats with optional email filter"""
     email_filter = request.args.get('email', '').strip()
@@ -221,6 +223,7 @@ def get_stats():
 
 
 @admin_bp.route('/api/admin/analyze-emails', methods=['POST'])
+@require_admin
 def analyze_emails():
     """Analyze all emails using deterministic rules and update verdicts"""
     # Get all players without a verdict (or optionally re-analyze all)
@@ -258,6 +261,7 @@ def analyze_emails():
 
 
 @admin_bp.route('/api/admin/events/<event_id>/players', methods=['GET'])
+@require_admin
 def get_event_players(event_id):
     """Get players who participated in a specific event via consent records"""
     event = Event.query.get(event_id)
@@ -316,12 +320,14 @@ def get_event_players(event_id):
 # --- Organizer Management (Super Admin) ---
 
 @admin_bp.route('/api/admin/organizers', methods=['GET'])
+@require_admin
 def list_organizers():
     organizers = Organizer.query.order_by(Organizer.created_at.desc()).all()
     return jsonify([o.to_dict() for o in organizers])
 
 
 @admin_bp.route('/api/admin/organizers', methods=['POST'])
+@require_admin
 def create_organizer():
     data = request.get_json()
     if not data or not data.get('email') or not data.get('name'):
@@ -342,6 +348,7 @@ def create_organizer():
 
 
 @admin_bp.route('/api/admin/organizers/<organizer_id>', methods=['PATCH'])
+@require_admin
 def update_organizer(organizer_id):
     organizer = Organizer.query.get(organizer_id)
     if not organizer:
@@ -358,6 +365,7 @@ def update_organizer(organizer_id):
 
 
 @admin_bp.route('/api/admin/organizers/<organizer_id>', methods=['DELETE'])
+@require_admin
 def delete_organizer(organizer_id):
     organizer = Organizer.query.get(organizer_id)
     if not organizer:

@@ -1,8 +1,9 @@
-import { Outlet, Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import AppLayout from './AppLayout';
+import { AdminPage } from '../pages/AdminPage';
 
-export default function DashboardLayout() {
+export default function AdminLayout() {
   const { organizer, loading, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -18,6 +19,10 @@ export default function DashboardLayout() {
     return <Navigate to="/login" replace />;
   }
 
+  if (!organizer.is_admin) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   const handleLogout = async () => {
     await logout();
     navigate('/login');
@@ -27,6 +32,7 @@ export default function DashboardLayout() {
     <AppLayout
       rightContent={
         <>
+          <span className="text-xs text-gray-400 bg-gray-800 px-2 py-1 rounded">Admin</span>
           <span className="text-sm text-gray-500">{organizer.email}</span>
           <button onClick={handleLogout} className="text-sm text-gray-500 hover:text-white">
             Log out
@@ -34,7 +40,7 @@ export default function DashboardLayout() {
         </>
       }
     >
-      <Outlet />
+      <AdminPage />
     </AppLayout>
   );
 }
