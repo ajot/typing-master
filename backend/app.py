@@ -19,6 +19,15 @@ def create_app():
         'postgresql://localhost/typing_master'
     )
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+    # Neon scales compute to zero when idle, which drops pooled connections.
+    # pre_ping discards dead connections instead of handing them to a request.
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+        'pool_pre_ping': True,
+        'pool_recycle': 300,
+        'pool_size': 2,
+        'max_overflow': 3,
+    }
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
 
     # Initialize extensions
